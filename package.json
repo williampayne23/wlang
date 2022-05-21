@@ -1,0 +1,12 @@
+{
+  "name": "wlang",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/williampayne23/wlang.git",
+  "author": "Will Payne",
+  "license": "MIT",
+  "scripts": {
+    "start": "deno run index.ts",
+    "test": "deno test"
+  }
+}
