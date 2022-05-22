@@ -7,11 +7,13 @@ while (true) {
     const lexer = Lexer.parseLine(line);
     if (lexer.errorToken) {
       console.error(lexer.errorToken + "");
+      continue
     } else {
       console.log(lexer.toString());
     }
   }
   //Parser
+  
 
   //Interpreter
 }

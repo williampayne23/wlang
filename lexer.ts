@@ -12,7 +12,7 @@ export enum TokenType {
 }
 
 export enum Keywords {
-    LET
+  LET,
 }
 
 export class Token {
@@ -92,18 +92,22 @@ export class Lexer {
       number += this.nextCharacter;
       this.advance();
     }
+    this.pos--;
     return new Token(TokenType.NUMBER, parseFloat(number));
   }
 
-  parseIdentifierOrKeyword(): Token{
-      let name = ""
-      while(/[a-zA-Z_]/.test(this.nextCharacter)){
-          name += this.nextCharacter
-          this.advance()
-      } 
-      if(name in Keywords)
-        return new Token(TokenType.KEYWORD, name)
-    return new Token(TokenType.IDENTIFIER, name)
+  parseIdentifierOrKeyword(): Token {
+    let name = "";
+    while (/[a-zA-Z_]/.test(this.nextCharacter)) {
+      name += this.nextCharacter;
+      this.advance();
+    }
+
+    this.pos--;
+    if (name in Keywords) {
+      return new Token(TokenType.KEYWORD, name);
+    }
+    return new Token(TokenType.IDENTIFIER, name);
   }
 
   toString() {
@@ -115,32 +119,34 @@ export class Lexer {
     while (lexer.nextCharacter !== "") {
       if (lexer.nextCharacter == "+") {
         lexer.success(new Token(TokenType.PLUS));
-        lexer.advance();
       } else if (lexer.nextCharacter == "-") {
         lexer.success(new Token(TokenType.MINUS));
-        lexer.advance();
       } else if (lexer.nextCharacter == "/") {
         lexer.success(new Token(TokenType.DIVIDE));
-        lexer.advance();
       } else if (lexer.nextCharacter == "*") {
         lexer.success(new Token(TokenType.MULTIPLY));
-        lexer.advance();
       } else if (lexer.nextCharacter == "(") {
         lexer.success(new Token(TokenType.OPENPAR));
-        lexer.advance();
       } else if (lexer.nextCharacter == ")") {
         lexer.success(new Token(TokenType.CLOSEPAR));
-        lexer.advance();
       } else if ("1234567890".includes(lexer.nextCharacter)) {
         lexer.success(lexer.parseNumber());
       } else if (/[a-zA-Z]/.test(lexer.nextCharacter)) {
-        lexer.success(lexer.parseIdentifierOrKeyword())
-      }else if (" \t\n".includes(lexer.nextCharacter)) {
+        lexer.success(lexer.parseIdentifierOrKeyword());
+      } else if (" \t\n".includes(lexer.nextCharacter)) {
         lexer.advance();
+        continue;
       } else {
-        lexer.failure(new Token(TokenType.ERROR, "Unexpected character '" + lexer.nextCharacter + "'"));
+        console.log("ERROR");
+        lexer.failure(
+          new Token(
+            TokenType.ERROR,
+            "Unexpected character '" + lexer.nextCharacter + "'",
+          ),
+        );
         break;
       }
+      lexer.advance();
     }
     return lexer;
   }
