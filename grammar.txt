@@ -1,7 +1,9 @@
 expression  : term ((PLUS | MINUS) term)*
+            : IDENT:let EQ expression
 
 term        : factor ((MULT | DIV) factor)*
 
 factor      : NUMBER
+            : IDENTIFIER
             : (MINUS) factor
             : (LEFTBRACKET) expr (RIGHTBRACKET)

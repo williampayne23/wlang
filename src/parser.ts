@@ -1,5 +1,5 @@
 import Lexer from "./lexer.ts";
-import { BinOpNode, Node, NumberNode, UnOpNode } from "./nodes.ts";
+import { BinOpNode, Node, NumberNode, UnOpNode, VarAsignmentNode, VarRetrievalNode } from "./nodes.ts";
 import { Token, TokenType } from "./tokens.ts";
 import { UnexpectedTokenError, WLANGError } from "./errors.ts";
 
@@ -26,6 +26,18 @@ export default class Parser {
     }
 
     expr(): Node {
+        if(this.expectKeywordAndPass("let")){
+            const token = this.currentToken
+            if(!this.expectTokenAndPass(TokenType.IDENTIFIER)){
+                throw UnexpectedTokenError.createFromSingleToken(token, [TokenType.IDENTIFIER])
+            }
+            if(!this.expectTokenAndPass(TokenType.EQ)){
+                throw UnexpectedTokenError.createFromSingleToken(this.currentToken, [TokenType.EQ])
+            }
+
+            return new VarAsignmentNode(token, this.expr())
+            
+        }
         return this.binOp(this.term.bind(this), [TokenType.PLUS, TokenType.MINUS], this.term.bind(this));
     }
 
@@ -51,6 +63,10 @@ export default class Parser {
         if (this.expectTokenAndPass(TokenType.NUMBER)) {
             return new NumberNode(token);
         }
+        
+        if(this.expectTokenAndPass(TokenType.IDENTIFIER)){
+            return new VarRetrievalNode(token)
+        }
 
         if (this.expectTokenAndPass(TokenType.OPENPAR)) {
             const expr = this.expr();
@@ -75,6 +91,14 @@ export default class Parser {
             return true;
         }
         return false;
+    }
+
+    expectKeywordAndPass(keyword: string): boolean {
+        if (this.currentToken.isType([TokenType.KEYWORD]) && this.currentToken.value == keyword){
+            this.advance()
+            return true
+        }
+        return false
     }
 
     generateAST(): Node {

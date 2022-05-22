@@ -1,6 +1,9 @@
+import Context from "./context.ts";
 import Interpreter from "./interpreter.ts";
 import Lexer from "./lexer.ts";
 import Parser from "./parser.ts"
+
+const globalContext = new Context("Global")
 
 while (true) {
   const line = prompt(">");
@@ -18,7 +21,7 @@ while (true) {
       console.error(parseRes.error + "")
       continue
     }
-    const interpreter = Interpreter.visit(parseRes.result)
+    const interpreter = Interpreter.visit(parseRes.result, globalContext)
     if(interpreter.error || !interpreter.result){
       console.error(interpreter.error + "")
       continue

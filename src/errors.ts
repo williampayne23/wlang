@@ -1,3 +1,4 @@
+import Context from "./context.ts";
 import Position from "./position.ts";
 import { Token, TokenType } from "./tokens.ts";
 
@@ -62,5 +63,11 @@ export class DivideByZeroError extends WLANGError {
 export class NoNodeError extends WLANGError {
     constructor(){
         super("No node", new Position(0, 0, 0, "", ""), new Position(0, 0, 0, "", ""))
+    }
+}
+
+export class UndefinedVariableError extends WLANGError {
+    constructor(varName: string, context: Context, start: Position, end: Position){
+        super(`No variable ${varName} in ${context.name}`, start, end)
     }
 }

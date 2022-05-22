@@ -10,11 +10,12 @@ export enum TokenType {
     CLOSEPAR,
     KEYWORD,
     IDENTIFIER,
+    EQ,
     EOF,
 }
 
 export enum Keywords {
-    LET,
+    let,
 }
 
 export class Token {
