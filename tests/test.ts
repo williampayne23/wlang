@@ -1,5 +1,12 @@
 import { assertEquals, AssertionError, assertThrows } from "https://deno.land/std@0.140.0/testing/asserts.ts";
-import { DivideByZeroError, IllegalCharacterError, InvalidOperationError, UnexpectedTokenError, WLANGError } from "../src/errors.ts";
+import {
+    DivideByZeroError,
+    IllegalCharacterError,
+    InvalidOperationError,
+    NoNodeError,
+    UnexpectedTokenError,
+    WLANGError,
+} from "../src/errors.ts";
 import Interpreter from "../src/interpreter.ts";
 import Lexer from "../src/lexer.ts";
 import { BinOpNode, Node, NumberNode, UnOpNode } from "../src/nodes.ts";
@@ -10,8 +17,9 @@ import { NumberValue } from "../src/values.ts";
 
 // deno-lint-ignore no-explicit-any
 function makeTokensUtility(...arr: [TokenType, any?][]) {
+    const dummyPos = new Position(0, 0, 0, "", "");
     // deno-lint-ignore no-explicit-any
-    return arr.map((args: [TokenType, any?]) => new Token(...args));
+    return arr.map((args: [TokenType, any?]) => new Token(args[0], dummyPos, dummyPos, args[1]));
 }
 
 // deno-lint-ignore no-explicit-any
@@ -41,15 +49,16 @@ type unOpSpec = [TokenType, nodeSpec];
 type nodeSpec = (binOpSpec | numberNodeSpec | unOpSpec);
 
 function makeASTUtility(spec: nodeSpec): Node {
+    const dummyPos = new Position(0, 0, 0, "", "");
     if (spec.length == 3) {
         spec = spec as binOpSpec;
-        return new BinOpNode(makeASTUtility(spec[0]), new Token(spec[1]), makeASTUtility(spec[2]));
+        return new BinOpNode(makeASTUtility(spec[0]), new Token(spec[1], dummyPos, dummyPos), makeASTUtility(spec[2]));
     }
     if (spec.length == 2) {
         spec = spec as unOpSpec;
-        return new UnOpNode(new Token(spec[0]), makeASTUtility(spec[1]));
+        return new UnOpNode(new Token(spec[0], dummyPos, dummyPos), makeASTUtility(spec[1]));
     }
-    return new NumberNode(new Token(TokenType.NUMBER, spec[0]));
+    return new NumberNode(new Token(TokenType.NUMBER, dummyPos, dummyPos, spec[0]));
 }
 
 function assertMatchingAST(node: Node, expNode: Node) {
@@ -58,29 +67,59 @@ function assertMatchingAST(node: Node, expNode: Node) {
     }
 }
 
+function interpretLine(line: string) {
+    const lexer = Lexer.parseLine("", line);
+    const parser = Parser.parseLexer(lexer);
+    return Interpreter.visit(parser.result);
+}
+
 Deno.test("Utility classes", async (t) => {
-  await t.step("String return methods", () => {
-    const pos = new Position(0, 0, 0, "", "")
-    const token = new Token(TokenType.MINUS)
-    token.setPosition(pos, pos)
-    assertEquals(new UnexpectedTokenError(token, [TokenType.PLUS]).toString(), 
-    `Error: Unexpected token. Expected: PLUS received <MINUS> at col 0`)
+    await t.step("String return methods", () => {
+        const pos = new Position(0, 0, 0, "", "");
+        const token = new Token(TokenType.MINUS, pos, pos);
+        assertEquals(
+            UnexpectedTokenError.createFromSingleToken(token, [TokenType.PLUS]).toString(),
+            `Error: Unexpected token. Expected: PLUS received <MINUS> at col 0:\n`,
+        );
 
-    const expectedTree = makeASTUtility([[1], TokenType.PLUS, [TokenType.MINUS, [2]]]);
-    assertEquals(expectedTree.toString(), "(<NUMBER: 1> <PLUS> (<MINUS> <NUMBER: 2>))")
-  })
+        const expectedTree = makeASTUtility([[1], TokenType.PLUS, [TokenType.MINUS, [2]]]);
+        assertEquals(expectedTree.toString(), "(<NUMBER: 1> <PLUS> (<MINUS> <NUMBER: 2>))");
+    });
 
-  await t.step("Non matching nodes aren't equal", () => {
-    assertThrows(() => assertMatchingAST(makeASTUtility([[1], TokenType.PLUS, [2]]), makeASTUtility([TokenType.MINUS, [2]])))
-    assertThrows(() => assertMatchingAST(makeASTUtility([TokenType.MINUS, [2]]), makeASTUtility([[1], TokenType.PLUS, [2]])))
-  })
-})
+    await t.step("Non matching nodes aren't equal", () => {
+        assertThrows(() =>
+            assertMatchingAST(makeASTUtility([[1], TokenType.PLUS, [2]]), makeASTUtility([TokenType.MINUS, [2]]))
+        );
+        assertThrows(() =>
+            assertMatchingAST(makeASTUtility([TokenType.MINUS, [2]]), makeASTUtility([[1], TokenType.PLUS, [2]]))
+        );
+    });
+
+    await t.step("Values String Repr", (t) => {
+        const value = interpretLine("-1").result;
+        assertEquals(value?.toString(), "-1");
+    });
+
+    await t.step("Error pretty print", (t) => {
+        const dummyPos = new Position(7, 1, 2, "test", "Hello\nWorld")
+        dummyPos.advance()
+        assertEquals(dummyPos.nextChar, "r")
+        const dummyPosEnd = dummyPos.copy()
+        dummyPosEnd.advance()
+        let error = new WLANGError("Fake Error", dummyPos, dummyPosEnd)
+        assertEquals(error.toString(), `Error: Fake Error at col ${2}:\nWorld\n  ^`)
+
+        dummyPos.advance()
+        error = new WLANGError("Fake Error", dummyPos, dummyPosEnd)
+        assertEquals(error.toString(), `Error: Fake Error at col ${3}:\nWorld\n   ^`)
+    })
+});
 
 Deno.test("Lexer", async (t) => {
     await t.step("To string", () => {
-      const lex = Lexer.parseLine("<stdin>", "1").toString()
-      assertEquals(lex, "<NUMBER: 1>,<EOF>")
-    })
+        const lex = Lexer.parseLine("<stdin>", "1").toString();
+        assertEquals(lex, "<NUMBER: 1>,<EOF>");
+    });
 
     await t.step("Simple arithmatic", () => {
         const expectedResult = makeTokensUtility(
@@ -181,7 +220,7 @@ Deno.test("Parser", async (t) => {
             assertEquals(error?.posEnd?.nextChar, "");
         });
     });
-    
+
     await t.step("Brackets", async (t) => {
         await t.step("No brackets order of operations", () => {
             const lexer = Lexer.parseLine("<stdin>", "1 + 2 - 4 * 3");
@@ -219,91 +258,82 @@ Deno.test("Parser", async (t) => {
     });
 
     await t.step("Unary Operator", async (t) => {
-      await t.step("Single minus", () => {
-        const lexer = Lexer.parseLine("<stdin>", "-2");
-        const parseResult = Parser.parseLexer(lexer);
-        const tree = parseResult.result;
-        if (tree == undefined) return;
-        const expectedTree = makeASTUtility([TokenType.MINUS, [2]]);
-        assertMatchingAST(tree, expectedTree);
-      })
+        await t.step("Single minus", () => {
+            const lexer = Lexer.parseLine("<stdin>", "-2");
+            const parseResult = Parser.parseLexer(lexer);
+            const tree = parseResult.result;
+            if (tree == undefined) return;
+            const expectedTree = makeASTUtility([TokenType.MINUS, [2]]);
+            assertMatchingAST(tree, expectedTree);
+        });
 
-      await t.step("Multiple minus", () => {
-        const lexer = Lexer.parseLine("<stdin>", "---2");
-        const parseResult = Parser.parseLexer(lexer);
-        const tree = parseResult.result;
-        if (tree == undefined) return;
-        const expectedTree = makeASTUtility([
-          TokenType.MINUS, 
-          [TokenType.MINUS, 
-            [TokenType.MINUS, [2]]
-          ]
-        ]);
-        assertMatchingAST(tree, expectedTree);
-      })
+        await t.step("Multiple minus", () => {
+            const lexer = Lexer.parseLine("<stdin>", "---2");
+            const parseResult = Parser.parseLexer(lexer);
+            const tree = parseResult.result;
+            if (tree == undefined) return;
+            const expectedTree = makeASTUtility([
+                TokenType.MINUS,
+                [TokenType.MINUS, [TokenType.MINUS, [2]]],
+            ]);
+            assertMatchingAST(tree, expectedTree);
+        });
 
-      await t.step("Minus with no factor", () => {
-          const lexer = Lexer.parseLine("<stdin>", "-+");
-          const parseResult = Parser.parseLexer(lexer);
-          const error = parseResult.error;
-          assertTypeOf(error, UnexpectedTokenError);
-          assertEquals(error?.posStart?.nextChar, "-");
-      })
-    })
+        await t.step("Minus with no factor", () => {
+            const lexer = Lexer.parseLine("<stdin>", "-+");
+            const parseResult = Parser.parseLexer(lexer);
+            const error = parseResult.error;
+            assertTypeOf(error, UnexpectedTokenError);
+            assertEquals(error?.posStart?.nextChar, "+");
+        });
+    });
 });
 
 Deno.test("Interpreter", async (t) => {
-    function interpretLine(line: string){
-        const lexer = Lexer.parseLine("", line);
-        const parser = Parser.parseLexer(lexer)
-        return Interpreter.visit(parser.result)
-    }
-
     await t.step("Arithmatic", async (t) => {
         await t.step("Addition", () => {
-            const value = interpretLine("1 + 1").result
-            assertEquals(value, new NumberValue(2))
-        })
+            const value = interpretLine("1 + 1").result;
+            assertEquals(value, new NumberValue(2));
+        });
 
         await t.step("Subtraction", () => {
-            const value = interpretLine("1 - 1").result
-            assertEquals(value, new NumberValue(0))
-        })
+            const value = interpretLine("1 - 1").result;
+            assertEquals(value, new NumberValue(0));
+        });
 
         await t.step("Multiplication", () => {
-            const value = interpretLine("4 * 4").result
-            assertEquals(value, new NumberValue(16))
-        })
+            const value = interpretLine("4 * 4").result;
+            assertEquals(value, new NumberValue(16));
+        });
 
         await t.step("Division", () => {
-            const value = interpretLine("4 / 2").result
-            assertEquals(value, new NumberValue(2))
-        })
+            const value = interpretLine("4 / 2").result;
+            assertEquals(value, new NumberValue(2));
+        });
 
         await t.step("Negative numbers", () => {
-            const value = interpretLine("-1").result
-            assertEquals(value, new NumberValue(-1))
-        })
-    })
+            const value = interpretLine("-1").result;
+            assertEquals(value, new NumberValue(-1));
+        });
+    });
 
     await t.step("Runtime Errors", async (t) => {
         await t.step("Divide by zero", () => {
-            const result = interpretLine("4 / 0")
-            assertTypeOf(result.error, DivideByZeroError)
-        })
+            const result = interpretLine("4 / 0");
+            assertTypeOf(result.error, DivideByZeroError);
+        });
 
         await t.step("No node provided", () => {
-            const result = Interpreter.visit()
-            assertTypeOf(result.error, WLANGError)
-        })
+            const result = Interpreter.visit();
+            assertTypeOf(result.error, NoNodeError);
+        });
 
         await t.step("Invalid Operation Error", () => {
-            let result = Interpreter.visit(makeASTUtility([TokenType.DIVIDE, [2]]))
-            assertTypeOf(result.error, InvalidOperationError)
+            let result = Interpreter.visit(makeASTUtility([TokenType.DIVIDE, [2]]));
+            assertTypeOf(result.error, InvalidOperationError);
 
-
-            result = Interpreter.visit(makeASTUtility([[2], TokenType.IDENTIFIER, [2]]))
-            assertTypeOf(result.error, InvalidOperationError)
-        })
-    })
-})
+            result = Interpreter.visit(makeASTUtility([[2], TokenType.IDENTIFIER, [2]]));
+            assertTypeOf(result.error, InvalidOperationError);
+        });
+    });
+});

@@ -1,10 +1,14 @@
 export abstract class Value {
+    // deno-lint-ignore no-explicit-any
     value: any
 
     abstract multiply(value: Value): Value;
     abstract divide(value: Value): Value;
     abstract minus(value: Value): Value;
     abstract plus(value: Value): Value;
+    toString(){
+        return `${this.value}`
+    }
 }
 
 export class NumberValue extends Value {

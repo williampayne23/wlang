@@ -58,7 +58,7 @@ export default class Parser {
             if (this.expectTokenAndPass(TokenType.CLOSEPAR)) {
                 return expr;
             }
-            throw new UnexpectedTokenError(this.currentToken, [TokenType.CLOSEPAR]);
+            throw new UnexpectedTokenError(this.currentToken, token.end, this.currentToken.end,  [TokenType.CLOSEPAR]);
         }
 
         if(this.expectTokenAndPass(TokenType.MINUS)) {
@@ -66,7 +66,7 @@ export default class Parser {
             return new UnOpNode(token, node)
         }
 
-        throw new UnexpectedTokenError(token, [TokenType.NUMBER, TokenType.OPENPAR, TokenType.MINUS]);
+        throw new UnexpectedTokenError(token, token.start.copy(), this.currentToken.end.copy(), [TokenType.NUMBER, TokenType.OPENPAR, TokenType.MINUS]);
     }
 
     expectTokenAndPass(...allowedTypes: TokenType[]): boolean {
@@ -83,7 +83,7 @@ export default class Parser {
         if (this.expectTokenAndPass(TokenType.EOF)) {
             return res;
         }
-        throw new UnexpectedTokenError(this.currentToken, [TokenType.EOF])
+        throw UnexpectedTokenError.createFromSingleToken(this.currentToken, [TokenType.EOF])
     }
 
     static parseLexer(lexer: Lexer): ParseResult {

@@ -15,15 +15,15 @@ while (true) {
     //Parser
     const parseRes = Parser.parseLexer(lexer)
     if(parseRes.result == undefined || parseRes.error){
-      console.error(parseRes.error)
+      console.error(parseRes.error + "")
       continue
     }
     const interpreter = Interpreter.visit(parseRes.result)
-    if(interpreter.error){
-      console.error(interpreter.error)
+    if(interpreter.error || !interpreter.result){
+      console.error(interpreter.error + "")
       continue
     }
-    console.log(interpreter.result)
+    console.log(`${interpreter.result}`)
 
 
     //Interpreter

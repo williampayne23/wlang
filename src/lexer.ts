@@ -2,6 +2,7 @@ import { IllegalCharacterError } from "./errors.ts";
 import Position from "./position.ts";
 import { Keywords, Token, TokenType } from "./tokens.ts";
 
+type TokenArgs = [TokenType, (string | number | undefined)]
 export default class Lexer {
   lastPos: Position
   pos: Position
@@ -17,8 +18,8 @@ export default class Lexer {
     this.pos.advance()
   }
 
-  success(token: Token) {
-    token.setPosition(this.lastPos.copy(), this.pos.copy());
+  success(type: TokenType, value?: string|number) {
+    const token = new Token(type, this.lastPos.copy(), this.pos.copy(), value)
     this.tokens.push(token);
     this.lastPos = this.pos.copy()
     return token
@@ -30,7 +31,7 @@ export default class Lexer {
     return this.error
   }
 
-  parseNumber(): Token {
+  parseNumber(): TokenArgs {
     let number = "";
     let decimalCount = 0;
     while (
@@ -45,19 +46,19 @@ export default class Lexer {
       number += this.pos.nextChar;
       this.advance();
     }
-    return new Token(TokenType.NUMBER, parseFloat(number));
+    return [TokenType.NUMBER, parseFloat(number)];
   }
 
-  parseIdentifierOrKeyword(): Token {
+  parseIdentifierOrKeyword(): TokenArgs {
     let name = "";
     while (/[a-zA-Z_]/.test(this.pos.nextChar)) {
       name += this.pos.nextChar;
       this.advance();
     }
     if (name in Keywords) {
-      return new Token(TokenType.KEYWORD, name);
+      return [TokenType.KEYWORD, name];
     }
-    return new Token(TokenType.IDENTIFIER, name);
+    return [TokenType.IDENTIFIER, name];
   }
 
   toString() {
@@ -68,27 +69,27 @@ export default class Lexer {
     const lexer = new Lexer(file, line);
     while (lexer.pos.nextChar !== "") {
       if (lexer.pos.nextChar == "+") {
-        lexer.success(new Token(TokenType.PLUS));
         lexer.advance();
+        lexer.success(TokenType.PLUS);
       } else if (lexer.pos.nextChar == "-") {
-        lexer.success(new Token(TokenType.MINUS));
         lexer.advance();
+        lexer.success(TokenType.MINUS);
       } else if (lexer.pos.nextChar == "/") {
-        lexer.success(new Token(TokenType.DIVIDE));
         lexer.advance();
+        lexer.success(TokenType.DIVIDE);
       } else if (lexer.pos.nextChar == "*") {
-        lexer.success(new Token(TokenType.MULTIPLY));
         lexer.advance();
+        lexer.success(TokenType.MULTIPLY);
       } else if (lexer.pos.nextChar == "(") {
-        lexer.success(new Token(TokenType.OPENPAR));
         lexer.advance();
+        lexer.success(TokenType.OPENPAR);
       } else if (lexer.pos.nextChar == ")") {
-        lexer.success(new Token(TokenType.CLOSEPAR));
         lexer.advance();
+        lexer.success(TokenType.CLOSEPAR);
       } else if ("1234567890".includes(lexer.pos.nextChar)) {
-        lexer.success(lexer.parseNumber());
+        lexer.success(...lexer.parseNumber());
       } else if (/[a-zA-Z]/.test(lexer.pos.nextChar)) {
-        lexer.success(lexer.parseIdentifierOrKeyword());
+        lexer.success(...lexer.parseIdentifierOrKeyword());
       } else if (" \t\n".includes(lexer.pos.nextChar)) {
         lexer.advance();
         lexer.lastPos = lexer.pos.copy()
@@ -98,7 +99,7 @@ export default class Lexer {
         break;
       }
     }
-    lexer.success(new Token(TokenType.EOF))
+    lexer.success(TokenType.EOF)
     return lexer;
   }
 }

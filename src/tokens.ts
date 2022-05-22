@@ -10,36 +10,33 @@ export enum TokenType {
     CLOSEPAR,
     KEYWORD,
     IDENTIFIER,
-    EOF
-  }
-  
-  export enum Keywords {
+    EOF,
+}
+
+export enum Keywords {
     LET,
-  }
-  
-  export class Token {
+}
+
+export class Token {
     type: TokenType;
     value?: (number | string);
-    start?: Position;
-    end?: Position;
-  
-    constructor(type: TokenType, value?: (number | string)) {
-      this.type = type;
-      this.value = value;
-    }
-  
-    setPosition(start: Position, end: Position) {
-      this.start = start;
-      this.end = end;
+    start: Position;
+    end: Position;
+
+    constructor(type: TokenType, start: Position, end: Position, value?: (number | string)) {
+        this.type = type;
+        this.value = value;
+        this.start = start;
+        this.end = end
     }
 
-    isType(types: TokenType[]){
-      return types.includes(this.type)
+    isType(types: TokenType[]) {
+        return types.includes(this.type);
     }
-  
+
     toString(): string {
-      let res = `<${TokenType[this.type]}`;
-      res += this.value ? `: ${this.value}>` : `>`;
-      return res;
+        let res = `<${TokenType[this.type]}`;
+        res += this.value ? `: ${this.value}>` : `>`;
+        return res;
     }
-  }
+}
