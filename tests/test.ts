@@ -1,10 +1,12 @@
 import { assertEquals, AssertionError, assertThrows } from "https://deno.land/std@0.140.0/testing/asserts.ts";
-import { IllegalCharacterError, UnexpectedTokenError } from "../src/errors.ts";
+import { DivideByZeroError, IllegalCharacterError, InvalidOperationError, UnexpectedTokenError, WLANGError } from "../src/errors.ts";
+import Interpreter from "../src/interpreter.ts";
 import Lexer from "../src/lexer.ts";
 import { BinOpNode, Node, NumberNode, UnOpNode } from "../src/nodes.ts";
 import Parser from "../src/parser.ts";
 import Position from "../src/position.ts";
 import { Token, TokenType } from "../src/tokens.ts";
+import { NumberValue } from "../src/values.ts";
 
 // deno-lint-ignore no-explicit-any
 function makeTokensUtility(...arr: [TokenType, any?][]) {
@@ -56,13 +58,13 @@ function assertMatchingAST(node: Node, expNode: Node) {
     }
 }
 
-Deno.test("Utility slasses", async (t) => {
+Deno.test("Utility classes", async (t) => {
   await t.step("String return methods", () => {
     const pos = new Position(0, 0, 0, "", "")
     const token = new Token(TokenType.MINUS)
     token.setPosition(pos, pos)
     assertEquals(new UnexpectedTokenError(token, [TokenType.PLUS]).toString(), 
-    `Error: Unexpected token error: Expected: PLUS received <MINUS> at col 0`)
+    `Error: Unexpected token. Expected: PLUS received <MINUS> at col 0`)
 
     const expectedTree = makeASTUtility([[1], TokenType.PLUS, [TokenType.MINUS, [2]]]);
     assertEquals(expectedTree.toString(), "(<NUMBER: 1> <PLUS> (<MINUS> <NUMBER: 2>))")
@@ -249,3 +251,59 @@ Deno.test("Parser", async (t) => {
       })
     })
 });
+
+Deno.test("Interpreter", async (t) => {
+    function interpretLine(line: string){
+        const lexer = Lexer.parseLine("", line);
+        const parser = Parser.parseLexer(lexer)
+        return Interpreter.visit(parser.result)
+    }
+
+    await t.step("Arithmatic", async (t) => {
+        await t.step("Addition", () => {
+            const value = interpretLine("1 + 1").result
+            assertEquals(value, new NumberValue(2))
+        })
+
+        await t.step("Subtraction", () => {
+            const value = interpretLine("1 - 1").result
+            assertEquals(value, new NumberValue(0))
+        })
+
+        await t.step("Multiplication", () => {
+            const value = interpretLine("4 * 4").result
+            assertEquals(value, new NumberValue(16))
+        })
+
+        await t.step("Division", () => {
+            const value = interpretLine("4 / 2").result
+            assertEquals(value, new NumberValue(2))
+        })
+
+        await t.step("Negative numbers", () => {
+            const value = interpretLine("-1").result
+            assertEquals(value, new NumberValue(-1))
+        })
+    })
+
+    await t.step("Runtime Errors", async (t) => {
+        await t.step("Divide by zero", () => {
+            const result = interpretLine("4 / 0")
+            assertTypeOf(result.error, DivideByZeroError)
+        })
+
+        await t.step("No node provided", () => {
+            const result = Interpreter.visit()
+            assertTypeOf(result.error, WLANGError)
+        })
+
+        await t.step("Invalid Operation Error", () => {
+            let result = Interpreter.visit(makeASTUtility([TokenType.DIVIDE, [2]]))
+            assertTypeOf(result.error, InvalidOperationError)
+
+
+            result = Interpreter.visit(makeASTUtility([[2], TokenType.IDENTIFIER, [2]]))
+            assertTypeOf(result.error, InvalidOperationError)
+        })
+    })
+})

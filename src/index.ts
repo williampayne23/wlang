@@ -1,3 +1,4 @@
+import Interpreter from "./interpreter.ts";
 import Lexer from "./lexer.ts";
 import Parser from "./parser.ts"
 
@@ -13,11 +14,16 @@ while (true) {
     }
     //Parser
     const parseRes = Parser.parseLexer(lexer)
-    if(parseRes.error){
+    if(parseRes.result == undefined || parseRes.error){
       console.error(parseRes.error)
       continue
     }
-    console.log(parseRes.result?.toString())
+    const interpreter = Interpreter.visit(parseRes.result)
+    if(interpreter.error){
+      console.error(interpreter.error)
+      continue
+    }
+    console.log(interpreter.result)
 
 
     //Interpreter

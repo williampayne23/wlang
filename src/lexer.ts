@@ -18,7 +18,7 @@ export default class Lexer {
   }
 
   success(token: Token) {
-    token.setPosition(this.lastPos.copy(), this.pos);
+    token.setPosition(this.lastPos.copy(), this.pos.copy());
     this.tokens.push(token);
     this.lastPos = this.pos.copy()
     return token

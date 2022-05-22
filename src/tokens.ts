@@ -25,9 +25,7 @@ export enum TokenType {
   
     constructor(type: TokenType, value?: (number | string)) {
       this.type = type;
-      if (value) {
-        this.value = value;
-      }
+      this.value = value;
     }
   
     setPosition(start: Position, end: Position) {

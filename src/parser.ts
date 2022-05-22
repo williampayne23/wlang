@@ -58,7 +58,7 @@ export default class Parser {
             if (this.expectTokenAndPass(TokenType.CLOSEPAR)) {
                 return expr;
             }
-            throw new UnexpectedTokenError(token, [TokenType.CLOSEPAR]);
+            throw new UnexpectedTokenError(this.currentToken, [TokenType.CLOSEPAR]);
         }
 
         if(this.expectTokenAndPass(TokenType.MINUS)) {

@@ -25,7 +25,20 @@ export class IllegalCharacterError extends WLANGError {
 
 export class UnexpectedTokenError extends WLANGError {
     constructor(token: Token, expectedTokens: TokenType[]) {
-        const text = `Unexpected token error: Expected: ${expectedTokens.map(e => TokenType[e]).join(",")} received ${token}`;
+        const text = `Unexpected token. Expected: ${expectedTokens.map(e => TokenType[e]).join(",")} received ${token}`;
         super(text, token.start, token.end);
+    }
+}
+
+export class InvalidOperationError extends WLANGError {
+    constructor(token: Token, expectedTokens: TokenType[]){
+        const text = `Invalid operation. Expected: ${expectedTokens.map(e => TokenType[e]).join(",")} received ${token}`
+        super(text, token.start, token.end)
+    }
+}
+
+export class DivideByZeroError extends WLANGError {
+    constructor(token:Token){
+        super("Divide by zero error", token.start, token.end)
     }
 }
