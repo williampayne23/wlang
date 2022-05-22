@@ -1,5 +1,7 @@
-expression: term ((PLUS | MINUS) term)*
+expression  : term ((PLUS | MINUS) term)*
 
-term: factor ((MULT | DIV) factor)*
+term        : factor ((MULT | DIV) factor)*
 
-factor: NUMBER
+factor      : NUMBER
+            : (MINUS) factor
+            : (LEFTBRACKET) expr (RIGHTBRACKET)

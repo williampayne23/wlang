@@ -1,19 +1,26 @@
-import { Lexer } from "./lexer.ts";
+import Lexer from "./lexer.ts";
+import Parser from "./parser.ts"
 
 while (true) {
   const line = prompt(">");
   //Lexer
   if (line) {
-    const lexer = Lexer.parseLine(line);
-    if (lexer.errorToken) {
-      console.error(lexer.errorToken + "");
+    //Lexer
+    const lexer = Lexer.parseLine("<stdin>", line);
+    if (lexer.error) {
+      console.error(lexer.error + "")
       continue
-    } else {
-      console.log(lexer.toString());
     }
-  }
-  //Parser
-  
+    //Parser
+    const parseRes = Parser.parseLexer(lexer)
+    if(parseRes.error){
+      console.error(parseRes.error)
+      continue
+    }
+    console.log(parseRes.result?.toString())
 
-  //Interpreter
+
+    //Interpreter
+
+  }
 }
