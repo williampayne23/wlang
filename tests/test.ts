@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.140.0/testing/asserts.ts";
-import { Lexer } from "./lexer.ts";
+import { Lexer } from "../src/lexer.ts";
 
 Deno.test("Lexer", async (t) => {
   await t.step("Simple arithmatic", () => {

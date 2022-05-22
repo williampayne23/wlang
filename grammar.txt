@@ -1,0 +1,5 @@
+expression: term ((PLUS | MINUS) term)*
+
+term: factor ((MULT | DIV) factor)*
+
+factor: NUMBER

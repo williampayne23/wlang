@@ -6,7 +6,7 @@
   "author": "Will Payne",
   "license": "MIT",
   "scripts": {
-    "start": "deno run index.ts",
+    "start": "deno run src/index.ts",
     "test": "deno test"
   }
 }

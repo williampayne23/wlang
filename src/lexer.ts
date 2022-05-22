@@ -137,7 +137,6 @@ export class Lexer {
         lexer.advance();
         continue;
       } else {
-        console.log("ERROR");
         lexer.failure(
           new Token(
             TokenType.ERROR,
