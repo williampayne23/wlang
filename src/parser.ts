@@ -3,32 +3,10 @@ import { BinOpNode, Node, NumberNode, UnOpNode } from "./nodes.ts";
 import { Token, TokenType } from "./tokens.ts";
 import { UnexpectedTokenError, WLANGError } from "./errors.ts";
 
-class ParseResult {
+type ParseResult = {
     result?: Node;
     error?: WLANGError;
-
-    constructor() {
-    }
-
-    register(res: ParseResult): Node | undefined {
-        if (res.error) {
-            this.failure(res.error);
-            return undefined;
-        }
-        return res.result;
-    }
-
-    success(node: Node): ParseResult {
-        this.result = node;
-        return this;
-    }
-
-    failure(error?: WLANGError): ParseResult {
-        this.error = error;
-        return this;
-    }
 }
-
 export default class Parser {
     tokens: Token[];
     currentToken: Token;
@@ -47,54 +25,48 @@ export default class Parser {
         }
     }
 
-    expr(): ParseResult {
+    expr(): Node {
         return this.binOp(this.term.bind(this), [TokenType.PLUS, TokenType.MINUS], this.term.bind(this));
     }
 
-    term(): ParseResult {
+    term(): Node {
         return this.binOp(this.factor.bind(this), [TokenType.MULTIPLY, TokenType.DIVIDE], this.factor.bind(this));
     }
 
-    binOp(leftTerm: () => ParseResult, allowedOperators: TokenType[], rightTerm: () => ParseResult): ParseResult {
-        const res = new ParseResult();
-        let left = res.register(leftTerm());
-        if (left == undefined || res.error) return res;
+    binOp(leftTerm: () => Node, allowedOperators: TokenType[], rightTerm: () => Node): Node {
+        let left = leftTerm()
 
         while (this.currentToken.isType(allowedOperators)) {
             const opToken = this.currentToken;
             this.advance();
-            const right = res.register(rightTerm());
-            if (right == undefined || res.error) return res;
+            const right = rightTerm();
             left = new BinOpNode(left, opToken, right);
         }
-        return res.success(left);
+        return left;
     }
 
-    factor(): ParseResult {
-        const res = new ParseResult();
+    factor(): Node {
         const token = this.currentToken;
 
         if (this.expectTokenAndPass(TokenType.NUMBER)) {
-            return res.success(new NumberNode(token));
+            return new NumberNode(token);
         }
 
         if (this.expectTokenAndPass(TokenType.OPENPAR)) {
-            const expr = res.register(this.expr());
-            if (expr == undefined || res.error) return res;
+            const expr = this.expr();
 
             if (this.expectTokenAndPass(TokenType.CLOSEPAR)) {
-                return res.success(expr);
+                return expr;
             }
-            return res.failure(new UnexpectedTokenError(token, [TokenType.CLOSEPAR]));
+            throw new UnexpectedTokenError(token, [TokenType.CLOSEPAR]);
         }
 
         if(this.expectTokenAndPass(TokenType.MINUS)) {
-            const node = res.register(this.factor())
-            if(node == undefined || res.error) return res
-            return res.success(new UnOpNode(token, node))
+            const node = this.factor()
+            return new UnOpNode(token, node)
         }
 
-        return res.failure(new UnexpectedTokenError(token, [TokenType.NUMBER, TokenType.OPENPAR, TokenType.MINUS]));
+        throw new UnexpectedTokenError(token, [TokenType.NUMBER, TokenType.OPENPAR, TokenType.MINUS]);
     }
 
     expectTokenAndPass(...allowedTypes: TokenType[]): boolean {
@@ -105,15 +77,22 @@ export default class Parser {
         return false;
     }
 
-    static parseLexer(lexer: Lexer): ParseResult {
-        const parser = new Parser(lexer);
-        const res = parser.expr();
-        if (res.error) return res;
+    generateAST(): Node {
+        const res = this.expr();
 
-        if (parser.currentToken.isType([TokenType.EOF])) {
-            parser.advance();
+        if (this.expectTokenAndPass(TokenType.EOF)) {
             return res;
         }
-        return res.failure(new UnexpectedTokenError(parser.currentToken, [TokenType.EOF]));
+        throw new UnexpectedTokenError(this.currentToken, [TokenType.EOF])
+    }
+
+    static parseLexer(lexer: Lexer): ParseResult {
+        try {
+            const parser = new Parser(lexer);
+            const node = parser.generateAST()
+            return {result: node}
+        } catch (e) {
+            return {error: e}
+        }
     }
 }

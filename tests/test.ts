@@ -1,4 +1,4 @@
-import { assertEquals, AssertionError, assertIsError, assertThrows } from "https://deno.land/std@0.140.0/testing/asserts.ts";
+import { assertEquals, AssertionError, assertThrows } from "https://deno.land/std@0.140.0/testing/asserts.ts";
 import { IllegalCharacterError, UnexpectedTokenError } from "../src/errors.ts";
 import Lexer from "../src/lexer.ts";
 import { BinOpNode, Node, NumberNode, UnOpNode } from "../src/nodes.ts";
@@ -6,10 +6,13 @@ import Parser from "../src/parser.ts";
 import Position from "../src/position.ts";
 import { Token, TokenType } from "../src/tokens.ts";
 
+// deno-lint-ignore no-explicit-any
 function makeTokensUtility(...arr: [TokenType, any?][]) {
+    // deno-lint-ignore no-explicit-any
     return arr.map((args: [TokenType, any?]) => new Token(...args));
 }
 
+// deno-lint-ignore no-explicit-any
 function assertTypeOf(object: any, type: any) {
     if (object.constructor != type) {
         throw new AssertionError(`Expected object of type ${object.constructor.name} to have type: ${type.name}`);
