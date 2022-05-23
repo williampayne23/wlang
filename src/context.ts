@@ -20,4 +20,10 @@ export default class Context {
         throw Error
     }
 
+    copy(): Context{
+        const newContext = new Context(this.name, this.parent?.copy())
+        newContext.values = structuredClone(this.values)
+        return newContext
+    }
+
 }

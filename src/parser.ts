@@ -1,19 +1,14 @@
-import Lexer from "./lexer.ts";
 import { BinOpNode, Node, NumberNode, UnOpNode, VarAsignmentNode, VarRetrievalNode } from "./nodes.ts";
 import { Token, TokenType } from "./tokens.ts";
-import { UnexpectedTokenError, WLANGError } from "./errors.ts";
+import { UnexpectedTokenError } from "./errors.ts";
 
-type ParseResult = {
-    result?: Node;
-    error?: WLANGError;
-}
 export default class Parser {
     tokens: Token[];
     currentToken: Token;
     tokenIndex: number;
 
-    constructor(lexer: Lexer) {
-        this.tokens = [...lexer.tokens];
+    constructor(tokens: Token[]) {
+        this.tokens = [...tokens];
         this.tokenIndex = 0;
         this.currentToken = this.tokens[0];
     }
@@ -110,13 +105,9 @@ export default class Parser {
         throw UnexpectedTokenError.createFromSingleToken(this.currentToken, [TokenType.EOF])
     }
 
-    static parseLexer(lexer: Lexer): ParseResult {
-        try {
-            const parser = new Parser(lexer);
-            const node = parser.generateAST()
-            return {result: node}
-        } catch (e) {
-            return {error: e}
-        }
+    static parseTokens(tokens: Token[]): Node {
+        const parser = new Parser(tokens);
+        const node = parser.generateAST()
+        return node
     }
 }

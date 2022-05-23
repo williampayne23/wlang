@@ -21,18 +21,24 @@ Deno.test("Lexer", async (t) => {
             [TokenType.CLOSEPAR],
             [TokenType.EOF],
         );
-        const tokens = Lexer.parseLine("<stdin>", "(1+2-3*4 / 5 )").tokens;
+        const tokens = Lexer.tokensFromLine("<stdin>", "(1+2-3*4 / 5 )");
         assertMatchingTokens(tokens, expectedResult);
     });
 
     await t.step("Illegal character error", () => {
-        const lex = Lexer.parseLine("<stdin>", ".");
-        assertTypeOf(lex.error, IllegalCharacterError);
+        try{
+            Lexer.tokensFromLine("<stdin>", ".");
+        } catch (e){
+            assertTypeOf(e, IllegalCharacterError);
+        }
     });
 
     await t.step("Illegal character error (too many decimals)", () => {
-        const lex = Lexer.parseLine("<stdin>", "1.222.");
-        assertTypeOf(lex.error, IllegalCharacterError);
+        try{
+            Lexer.tokensFromLine("<stdin>", "1.222.");
+        } catch (e){
+            assertTypeOf(e, IllegalCharacterError);
+        }
     });
 
     await t.step("Identifiers", () => {
@@ -40,7 +46,7 @@ Deno.test("Lexer", async (t) => {
             [TokenType.IDENTIFIER, "seven"],
             [TokenType.EOF],
         );
-        const tokens = Lexer.parseLine("<stdin>", "seven").tokens;
+        const tokens = Lexer.tokensFromLine("<stdin>", "seven");
         assertMatchingTokens(
             tokens,
             expectedResult,
@@ -52,7 +58,7 @@ Deno.test("Lexer", async (t) => {
             [TokenType.KEYWORD, "let"],
             [TokenType.EOF],
         );
-        const tokens = Lexer.parseLine("<stdin>", "let").tokens;
+        const tokens = Lexer.tokensFromLine("<stdin>", "let");
         assertMatchingTokens(
             tokens,
             expectedResult,
@@ -61,7 +67,7 @@ Deno.test("Lexer", async (t) => {
 
 
     await t.step("String Repr", () => {
-        const lex = Lexer.parseLine("<stdin>", "1").toString();
+        const lex = Lexer.tokensFromLine("<stdin>", "1").toString();
         assertEquals(lex, "<NUMBER: 1>,<EOF>");
     });
 });

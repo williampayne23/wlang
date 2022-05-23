@@ -6,7 +6,6 @@ type TokenArgs = [TokenType, (string | number | undefined)]
 export default class Lexer {
   lastPos: Position
   pos: Position
-  error?: IllegalCharacterError;
   tokens: Token[] = [];
 
   constructor(file: string, text: string) {
@@ -23,12 +22,6 @@ export default class Lexer {
     this.tokens.push(token);
     this.lastPos = this.pos.copy()
     return token
-  }
-
-  failure() {
-    this.error = new IllegalCharacterError(this.lastPos.copy(), this.pos.copy());
-    this.lastPos = this.pos.copy()
-    return this.error
   }
 
   parseNumber(): TokenArgs {
@@ -60,12 +53,8 @@ export default class Lexer {
     }
     return [TokenType.IDENTIFIER, name];
   }
-
-  toString() {
-    return this.tokens.map((token) => token.toString()).join(",");
-  }
-
-  static parseLine(file: string, line: string): Lexer {
+  
+  static tokensFromLine(file: string, line: string): Token[] {
     const lexer = new Lexer(file, line);
     while (lexer.pos.nextChar !== "") {
       if (lexer.pos.nextChar == "+") {
@@ -98,11 +87,10 @@ export default class Lexer {
         lexer.lastPos = lexer.pos.copy()
         continue;
       } else {
-        lexer.failure();
-        break;
+        throw new IllegalCharacterError(lexer.lastPos.copy(), lexer.pos.copy());
       }
     }
     lexer.success(TokenType.EOF)
-    return lexer;
+    return lexer.tokens;
   }
 }

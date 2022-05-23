@@ -7,28 +7,26 @@ import { assertMatchingAST, assertTypeOf, makeASTUtility } from "./testHelpers.t
 
 Deno.test("Parser", async (t) => {
     await t.step("Simple parse", () => {
-        const lexer = Lexer.parseLine("<stdin>", "1 + 2");
-        const parseResult = Parser.parseLexer(lexer);
-        const tree = parseResult.result;
-        if (tree == undefined) return;
+        const tokens = Lexer.tokensFromLine("<stdin>", "1 + 2");
+        const tree = Parser.parseTokens(tokens);
         const expectedTree = makeASTUtility([[1], TokenType.PLUS, [2]]);
         assertMatchingAST(tree, expectedTree);
     });
 
     await t.step("Unexpected Token on end of file", () => {
-        const lexer = Lexer.parseLine("<stdin>", "1 2");
-        const parseResult = Parser.parseLexer(lexer);
-        const error = parseResult.error;
-        assertTypeOf(error, UnexpectedTokenError);
-        assertEquals(error?.posStart?.nextChar, "2");
+        try{
+            const tokens = Lexer.tokensFromLine("<stdin>", "1 2");
+            Parser.parseTokens(tokens);
+        }catch (e){
+            assertTypeOf(e, UnexpectedTokenError);
+            assertEquals(e?.posStart?.nextChar, "2");
+        }
     });
 
     await t.step("Brackets", async (t) => {
         await t.step("No brackets order of operations", () => {
-            const lexer = Lexer.parseLine("<stdin>", "1 + 2 - 4 * 3");
-            const parseResult = Parser.parseLexer(lexer);
-            const tree = parseResult.result;
-            if (tree == undefined) return;
+            const tokens = Lexer.tokensFromLine("<stdin>", "1 + 2 - 4 * 3");
+            const tree = Parser.parseTokens(tokens);
             const expectedTree = makeASTUtility(
                 [
                     [[1], TokenType.PLUS, [2]],
@@ -40,10 +38,8 @@ Deno.test("Parser", async (t) => {
         });
 
         await t.step("Brackets change order of operations", () => {
-            const lexer = Lexer.parseLine("<stdin>", "1 + (2 - 4) * 3");
-            const parseResult = Parser.parseLexer(lexer);
-            const tree = parseResult.result;
-            if (tree == undefined) return;
+            const tokens = Lexer.tokensFromLine("<stdin>", "1 + (2 - 4) * 3");
+            const tree = Parser.parseTokens(tokens);
             const expectedTree = makeASTUtility(
                 [
                     [1],
@@ -59,37 +55,37 @@ Deno.test("Parser", async (t) => {
         });
 
         await t.step("No close bracket", () => {
-            const lexer = Lexer.parseLine("<stdin>", "(1");
-            const parseResult = Parser.parseLexer(lexer);
-            const error = parseResult.error;
-            assertTypeOf(error, UnexpectedTokenError);
-            assertEquals(error?.posEnd?.nextChar, "");
+            try{
+                const tokens = Lexer.tokensFromLine("<stdin>", "(1");
+                Parser.parseTokens(tokens);
+            }catch (e){
+                assertTypeOf(e, UnexpectedTokenError);
+                assertEquals(e?.posEnd?.nextChar, "");
+            }
         });
 
         await t.step("No expr in bracket", () => {
-            const lexer = Lexer.parseLine("<stdin>", "(");
-            const parseResult = Parser.parseLexer(lexer);
-            const error = parseResult.error;
-            assertTypeOf(error, UnexpectedTokenError);
-            assertEquals(error?.posEnd?.nextChar, "");
+            try{
+                const tokens = Lexer.tokensFromLine("<stdin>", "()");
+                Parser.parseTokens(tokens);
+            }catch (e){
+                assertTypeOf(e, UnexpectedTokenError);
+                assertEquals(e?.posEnd?.nextChar, "");
+            }
         });
     });
 
     await t.step("Unary Operator", async (t) => {
         await t.step("Single minus", () => {
-            const lexer = Lexer.parseLine("<stdin>", "-2");
-            const parseResult = Parser.parseLexer(lexer);
-            const tree = parseResult.result;
-            if (tree == undefined) return;
+            const tokens = Lexer.tokensFromLine("<stdin>", "-2");
+            const tree = Parser.parseTokens(tokens);
             const expectedTree = makeASTUtility([TokenType.MINUS, [2]]);
             assertMatchingAST(tree, expectedTree);
         });
 
         await t.step("Multiple minus", () => {
-            const lexer = Lexer.parseLine("<stdin>", "---2");
-            const parseResult = Parser.parseLexer(lexer);
-            const tree = parseResult.result;
-            if (tree == undefined) return;
+            const tokens = Lexer.tokensFromLine("<stdin>", "---2");
+            const tree = Parser.parseTokens(tokens);
             const expectedTree = makeASTUtility([
                 TokenType.MINUS,
                 [TokenType.MINUS, [TokenType.MINUS, [2]]],
@@ -98,41 +94,47 @@ Deno.test("Parser", async (t) => {
         });
 
         await t.step("Minus with no factor", () => {
-            const lexer = Lexer.parseLine("<stdin>", "-+");
-            const parseResult = Parser.parseLexer(lexer);
-            const error = parseResult.error;
-            assertTypeOf(error, UnexpectedTokenError);
-            assertEquals(error?.posStart?.nextChar, "+");
+            try{
+                const tokens = Lexer.tokensFromLine("<stdin>", "-+");
+                Parser.parseTokens(tokens);
+            }catch (e){
+                assertTypeOf(e, UnexpectedTokenError);
+                assertEquals(e?.posStart?.nextChar, "+");
+            }
         });
     });
 
     await t.step("Assignment", async (t) => {
         await t.step("Successful assignment", () => {
-            const lexer = Lexer.parseLine("<stdin>", "let x = 4");
-            const parseResult = Parser.parseLexer(lexer);
-            if (parseResult.result == undefined) return;
-            assertMatchingAST(parseResult.result, makeASTUtility(["x", [4]]));
+            const tokens = Lexer.tokensFromLine("<stdin>", "let x = 4");
+            const node = Parser.parseTokens(tokens);
+            assertMatchingAST(node, makeASTUtility(["x", [4]]));
         });
 
         await t.step("Let but no identifier", () => {
-            const lexer = Lexer.parseLine("<stdin>", "let 4");
-            const parseResult = Parser.parseLexer(lexer);
-            assertTypeOf(parseResult.error, UnexpectedTokenError)
+            try{
+                const tokens = Lexer.tokensFromLine("<stdin>", "let 4");
+                Parser.parseTokens(tokens);
+            }catch (e){
+                assertTypeOf(e, UnexpectedTokenError)
+            }
         });
 
         await t.step("Let but no equals", () => {
-            const lexer = Lexer.parseLine("<stdin>", "let x 4");
-            const parseResult = Parser.parseLexer(lexer);
-            assertTypeOf(parseResult.error, UnexpectedTokenError)
+            try{
+                const tokens = Lexer.tokensFromLine("<stdin>", "let x 4");
+                Parser.parseTokens(tokens);
+            }catch (e){
+                assertTypeOf(e, UnexpectedTokenError)
+            }
         });
     });
 
     await t.step("Retrieval", async (t) => {
         await t.step("Successful retrieval", () => {
-            const lexer = Lexer.parseLine("<stdin>", "x");
-            const parseResult = Parser.parseLexer(lexer);
-            if (parseResult.result == undefined) return;
-            assertMatchingAST(parseResult.result, makeASTUtility(["x"]));
+            const tokens = Lexer.tokensFromLine("<stdin>", "x");
+            const node = Parser.parseTokens(tokens);
+            assertMatchingAST(node, makeASTUtility(["x"]));
         });
     });
 });
