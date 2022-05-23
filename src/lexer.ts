@@ -91,11 +91,25 @@ export default class Lexer {
       } else if (lexer.pos.nextChar == "=") {
         lexer.advance();
         lexer.success(TokenType.EQ);
+      } else if (lexer.pos.nextChar == "!") {
+        lexer.advance();
+        if(lexer.pos.nextChar == "!"){
+          lexer.advance();
+          lexer.success(TokenType.KEYWORD, "last")
+          continue
+        }
+        lexer.success(TokenType.NOT);
       } else if ("1234567890".includes(lexer.pos.nextChar)) {
         lexer.success(...lexer.parseNumber());
       } else if (/[a-zA-Z]/.test(lexer.pos.nextChar)) {
         lexer.success(...lexer.parseIdentifierOrKeyword());
-      } else if (" \t\n".includes(lexer.pos.nextChar)) {
+      } else if ("\n".includes(lexer.pos.nextChar)) {
+        lexer.advance();
+        lexer.success(TokenType.NEWLINE);
+      } else if (";".includes(lexer.pos.nextChar)) {
+        lexer.advance();
+        lexer.success(TokenType.TEMINAL);
+      } else if (" \t".includes(lexer.pos.nextChar)) {
         lexer.advance();
         lexer.lastPos = lexer.pos.copy()
         continue;

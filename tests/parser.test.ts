@@ -8,9 +8,11 @@ Deno.test("Parser", async (t) => {
         assertParseResult("1 + 2", [[1], TokenType.PLUS, [2]])
     });
 
-    await t.step("Unexpected Token on end of file", () => {
-        assertParseError("1 2", UnexpectedTokenError, "2")
-    });
+    await t.step("Newlines", () => {
+        assertParseResult("last", [""])
+        assertParseResult("1\n", [1])
+        assertParseResult("1;", [1])
+    })
 
     await t.step("Order of Operations", async (t) => {
 
@@ -160,6 +162,10 @@ Deno.test("Parser", async (t) => {
 
         await t.step("Let but no equals", () => {
             assertParseError("let x 4", UnexpectedTokenError)
+        });
+
+        await t.step("At end of file", () => {
+            assertParseError("1 2", UnexpectedTokenError, "2")
         });
     });
 });

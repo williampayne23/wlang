@@ -59,6 +59,10 @@ export default class Parser {
     factor(): Node {
         const token = this.currentToken;
 
+        if(this.expectKeywordAndPass("last")){
+            return new VarRetrievalNode(new Token(TokenType.IDENTIFIER, this.currentToken.start, this.currentToken.end, ""))
+        }
+
         if (this.expectTokenAndPass(TokenType.NUMBER)) {
             return new NumberNode(token);
         }
@@ -100,18 +104,33 @@ export default class Parser {
         return false
     }
 
-    generateAST(): Node {
-        const res = this.expr();
-
-        if (this.expectTokenAndPass(TokenType.EOF)) {
-            return res;
+    line(): Node{
+        const expr = this.expr()
+        if(this.expectTokenAndPass(TokenType.NEWLINE)){
+            return expr
         }
-        throw UnexpectedTokenError.createFromSingleToken(this.currentToken, [TokenType.EOF])
+        if(this.expectTokenAndPass(TokenType.TEMINAL)){
+            expr.dontReturnValue()
+            return expr
+        }
+        if(this.currentToken.isType([TokenType.EOF])){ //We don't pass here so it'll be EOF in the root method
+            return expr
+        }
+        throw UnexpectedTokenError.createFromSingleToken(this.currentToken, [TokenType.NEWLINE, TokenType.TEMINAL, TokenType.EOF])
     }
 
-    static parseTokens(tokens: Token[]): Node {
+    generateAST(): Node[] {
+        const response = []
+        while(!this.currentToken.isType([TokenType.EOF])){
+            const line = this.line()
+            response.push(line)
+        }
+        return response;
+    }
+
+    static parseTokens(tokens: Token[]): Node[] {
         const parser = new Parser(tokens);
-        const node = parser.generateAST()
-        return node
+        const nodes = parser.generateAST()
+        return nodes
     }
 }

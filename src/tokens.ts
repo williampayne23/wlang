@@ -1,24 +1,43 @@
 import Position from "./position.ts";
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export enum TokenType {
-    PLUS,
-    MINUS,
-    DIVIDE,
-    MULTIPLY,
-    FLOORDIVIDE,
-    MODULUS,
-    POW,
-    NUMBER,
-    OPENPAR,
-    CLOSEPAR,
-    KEYWORD,
-    IDENTIFIER,
-    EQ,
-    EOF,
+PLUS,
+MINUS,
+DIVIDE,
+MULTIPLY,
+FLOORDIVIDE,
+MODULUS,
+POW,
+NUMBER,
+OPENPAR,
+CLOSEPAR,
+KEYWORD,
+IDENTIFIER,
+EQ,
+EOF,
+NEWLINE,
+TEMINAL,
+NOT
 }
 
 export enum Keywords {
     let,
+    last
 }
 
 export class Token {

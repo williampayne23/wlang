@@ -1,4 +1,4 @@
-import { Value } from "./values.ts";
+import { NullValue, Value } from "./values.ts";
 
     // public static deepCopy<T>(source: T): T {
     //     return Array.isArray(source)
@@ -37,7 +37,7 @@ export default class Context {
     constructor(name: string, parent?: Context) {
         this.name = name;
         this.parent = parent;
-        this.values = {};
+        this.values = {"": new NullValue()};
     }
 
     set(name: string, value: Value) {

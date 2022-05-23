@@ -36,9 +36,10 @@ export function assertParseResult(text: string, result: nodeSpec){
     const tokens = Lexer.tokensFromLine("<stdin>", text);
     const tree = Parser.parseTokens(tokens);
     const expectedTree = makeASTUtility(result);
-    assertMatchingAST(tree, expectedTree);
+    assertMatchingAST(tree[0], expectedTree);
 }
 
+// deno-lint-ignore no-explicit-any
 export function assertParseError(text: string, error: any, nextChar?: string){
     try {
         const tokens = Lexer.tokensFromLine("<stdin>", text);

@@ -1,18 +1,18 @@
 import { assertEquals } from "https://deno.land/std@0.140.0/testing/asserts.ts";
 import Context from "../src/context.ts";
-import { DivideByZeroError, NoNodeError, UndefinedVariableError } from "../src/errors.ts";
+import { DivideByZeroError, InvalidOperatorError, NoNodeError, UndefinedVariableError } from "../src/errors.ts";
 import Interpreter from "../src/interpreter.ts";
 import Lexer from "../src/lexer.ts";
 import Parser from "../src/parser.ts";
-import { NumberValue } from "../src/values.ts";
+import { NullValue, NumberValue } from "../src/values.ts";
 import { assertTypeOf } from "./testHelpers.ts";
 
 
 
 function interpretLine(line: string, context?: Context) {
     const tokens = Lexer.tokensFromLine("", line);
-    const node = Parser.parseTokens(tokens);
-    return Interpreter.visitNode(node, context);
+    const nodes = Parser.parseTokens(tokens);
+    return Interpreter.visitNodes(nodes, context);
 }
 
 Deno.test("Interpreter", async (t) => {
@@ -65,6 +65,31 @@ Deno.test("Interpreter", async (t) => {
         assertEquals(value, new NumberValue(4))
     })
 
+    await t.step("New lines", () => {
+        const [, context1] = interpretLine("let x = 4")
+        assertEquals(context1.get(""), new NumberValue(4))
+        const [, context2] = interpretLine("let x = 4;")
+        assertEquals(context2.get(""), new NullValue())
+        try {
+            interpretLine("1 + !!", context2)
+        }catch (e){
+            assertTypeOf(e, InvalidOperatorError)
+        }
+        try {
+            interpretLine("!! + 1", context2)
+        }catch (e){
+            assertTypeOf(e, InvalidOperatorError)
+        }
+        try {
+            interpretLine("-!!", context2)
+        }catch (e){
+            assertTypeOf(e, InvalidOperatorError)
+        }
+
+        const [result, ] = interpretLine("let x = 4; x + 1")
+        assertEquals(result, new NumberValue(5))
+    })
+
     await t.step("Runtime Errors", async (t) => {
         await t.step("Divide by zero", () => {
             try{
@@ -82,7 +107,7 @@ Deno.test("Interpreter", async (t) => {
 
         await t.step("No node provided", () => {
             try {
-                Interpreter.visitNode();
+                Interpreter.visitNodes([]);
             } catch (e){
                 assertTypeOf(e, NoNodeError);
             }
@@ -90,7 +115,6 @@ Deno.test("Interpreter", async (t) => {
 
         await t.step("Undefined variable", () => {
             try {
-
                 interpretLine("x")
             }catch (e) {
                 assertTypeOf(e, UndefinedVariableError)

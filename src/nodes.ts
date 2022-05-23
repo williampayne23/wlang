@@ -1,27 +1,40 @@
 import Context from "./context.ts";
-import { DivideByZeroError, InvalidOperationError, UndefinedVariableError } from "./errors.ts";
+import { DivideByZeroError, InvalidOperationError, InvalidOperatorError, UndefinedVariableError } from "./errors.ts";
 import Position from "./position.ts";
 import { Token, TokenType } from "./tokens.ts";
-import { NumberValue, Value } from "./values.ts";
+import { NullValue, NumberValue, OperatableValue, Value } from "./values.ts";
 
-export interface Node {
+export abstract class Node {
     leftPos: Position;
     rightPos: Position;
+    return = true;
 
-    isEqualTo: (node: Node) => boolean;
-    visit(context:Context): Value;
+    constructor(leftPos: Position, rightPos: Position){
+        this.rightPos = rightPos;
+        this.leftPos = leftPos;
+    }
+
+    dontReturnValue(){
+        this.return = false
+    }
+
+    evaluate(context: Context): Value {
+        const value = this.visit(context)
+        const out = this.return? value : new NullValue()
+        context.set("", out)
+        return this.return?  value : new NullValue()
+    }
+
+    abstract isEqualTo(node: Node): boolean;
+    abstract visit(context:Context): Value;
 }
 
-export class NumberNode implements Node {
-    value: Value
-
-    leftPos: Position;
-    rightPos: Position;
+export class NumberNode extends Node {
+    value: NumberValue
 
     constructor(token: Token) {
+        super(token.start, token.end)
         this.value = new NumberValue(parseFloat(token.value as string));
-        this.leftPos = token.start;
-        this.rightPos = token.end;
     }
 
     visit(): Value {
@@ -40,50 +53,58 @@ export class NumberNode implements Node {
     }
 }
 
-export class BinOpNode implements Node {
+export class BinOpNode extends Node {
     token: Token;
     leftNode: Node;
     rightNode: Node;
-    leftPos: Position;
-    rightPos: Position;
 
     constructor(leftNode: Node, operatorToken: Token, rightNode: Node) {
+        super(leftNode.leftPos, rightNode.rightPos)
         this.leftNode = leftNode;
         this.rightNode = rightNode;
         this.token = operatorToken;
-        this.leftPos = leftNode.leftPos;
-        this.rightPos = rightNode.rightPos;
     }
 
     visit(context: Context): Value {
+        const leftVal = this.leftNode.visit(context) as OperatableValue
+        const rightVal = this.rightNode.visit(context) as OperatableValue
+
+        if(!(leftVal instanceof OperatableValue)){
+            throw new InvalidOperatorError(this.token, leftVal);
+        }
+
+        if(!(rightVal instanceof OperatableValue)){
+            throw new InvalidOperatorError(this.token, rightVal);
+        }
+
         if(this.token.isType([TokenType.POW])){
-            return this.leftNode.visit(context).pow(this.rightNode.visit(context))
+            return leftVal.pow(rightVal)
         }
         if (this.token.isType([TokenType.MULTIPLY])) {
-            return this.leftNode.visit(context).multiply(this.rightNode.visit(context));
+            return leftVal.multiply(rightVal);
         }
         if (this.token.isType([TokenType.DIVIDE])) {
             try {
-                return this.leftNode.visit(context).divide(this.rightNode.visit(context));
+                return leftVal.divide(rightVal);
             } catch {
                 throw new DivideByZeroError(this.token.start, this.rightPos);
             }
         }
         if (this.token.isType([TokenType.FLOORDIVIDE])) {
             try {
-                return this.leftNode.visit(context).floorDivide(this.rightNode.visit(context));
+                return leftVal.floorDivide(rightVal);
             } catch {
                 throw new DivideByZeroError(this.token.start, this.rightPos);
             }
         }
         if (this.token.isType([TokenType.MINUS])) {
-            return this.leftNode.visit(context).minus(this.rightNode.visit(context));
+            return leftVal.minus(rightVal);
         }
         if (this.token.isType([TokenType.PLUS])) {
-            return this.leftNode.visit(context).plus(this.rightNode.visit(context));
+            return leftVal.plus(rightVal);
         }
         if (this.token.isType([TokenType.MODULUS])) {
-            return this.leftNode.visit(context).modulus(this.rightNode.visit(context));    
+            return leftVal.modulus(rightVal);    
         }
 
         throw new InvalidOperationError(this.token, [
@@ -111,13 +132,12 @@ export class BinOpNode implements Node {
     }
 }
 
-export class UnOpNode implements Node {
+export class UnOpNode extends Node {
     token: Token;
     node: Node;
-    leftPos: Position;
-    rightPos: Position;
 
     constructor(operator: Token, node: Node) {
+        super(operator.start, node.rightPos)
         this.token = operator;
         this.node = node;
         this.leftPos = operator.start;
@@ -125,8 +145,13 @@ export class UnOpNode implements Node {
     }
 
     visit(context: Context): Value {
+        const value = this.node.visit(context) as OperatableValue
+        if(!(value instanceof OperatableValue)){
+            throw new InvalidOperatorError(this.token, value)
+        }
+
         if (this.token.isType([TokenType.MINUS])) {
-            return this.node.visit(context).multiply(new NumberValue(-1));
+            return value.multiply(new NumberValue(-1));
         }
         throw new InvalidOperationError(this.token, [TokenType.MINUS]);
     }
@@ -144,17 +169,14 @@ export class UnOpNode implements Node {
     }
 }
 
-export class VarAsignmentNode implements Node {
+export class VarAsignmentNode extends Node {
     identifier: string;
-    leftPos: Position;
-    rightPos: Position;
     assignNode: Node;
 
     constructor(identifierToken: Token, node: Node) {
+        super(identifierToken.start, node.rightPos)
         this.identifier = identifierToken.value as string;
         this.assignNode = node;
-        this.leftPos = identifierToken.start;
-        this.rightPos = this.assignNode.rightPos;
     }
 
     visit(context: Context): Value {
@@ -171,15 +193,12 @@ export class VarAsignmentNode implements Node {
     }
 }
 
-export class VarRetrievalNode implements Node{
+export class VarRetrievalNode extends Node{
 identifier: string;
-leftPos: Position;
-rightPos: Position;
 
 constructor(identifierToken: Token) {
+    super(identifierToken.start, identifierToken.end)
     this.identifier = identifierToken.value as string;
-    this.leftPos = identifierToken.start;
-    this.rightPos = identifierToken.end;
 }
 
 isEqualTo(node: Node): boolean {

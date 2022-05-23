@@ -6,7 +6,7 @@
   "author": "Will Payne",
   "license": "MIT",
   "scripts": {
-    "start": "deno run src/index.ts",
+    "start": "deno run --allow-read src/index.ts",
     "test": "deno test",
     "coverage": "deno test --coverage=cov_profile; deno coverage cov_profile; rm -R cov_profile"
   }

@@ -1,6 +1,7 @@
 import Context from "./context.ts";
 import Position from "./position.ts";
 import { Token, TokenType } from "./tokens.ts";
+import { Value } from "./values.ts";
 
 export class WLANGError {
     details: string;
@@ -23,7 +24,7 @@ export class WLANGError {
             }
             out += line + "\n"
             let underlineLength = this.posEnd.col - this.posStart.col
-            underlineLength = underlineLength == 0? 1 : underlineLength;
+            underlineLength = underlineLength? underlineLength : 1;
             out += " ".repeat(this.posStart.col) + "^".repeat(underlineLength)
             return out
         }
@@ -50,6 +51,13 @@ export class UnexpectedTokenError extends WLANGError {
 export class InvalidOperationError extends WLANGError {
     constructor(token: Token, expectedTokens: TokenType[]){
         const text = `Invalid operation. Expected: ${expectedTokens.map(e => TokenType[e]).join(",")} received ${token}`
+        super(text, token.start, token.end)
+    }
+}
+
+export class InvalidOperatorError extends WLANGError {
+    constructor(token: Token, value: Value){
+        const text = `Invalid operation. cannot perform operation ${token} on ${value}`
         super(text, token.start, token.end)
     }
 }
