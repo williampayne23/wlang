@@ -48,13 +48,6 @@ export class UnexpectedTokenError extends WLANGError {
     }
 }
 
-export class InvalidOperationError extends WLANGError {
-    constructor(token: Token, expectedTokens: TokenType[]){
-        const text = `Invalid operation. Expected: ${expectedTokens.map(e => TokenType[e]).join(",")} received ${token}`
-        super(text, token.start, token.end)
-    }
-}
-
 export class InvalidOperatorError extends WLANGError {
     constructor(token: Token, value: Value){
         const text = `Invalid operation. cannot perform operation ${token} on ${value}`

@@ -26,9 +26,21 @@ Deno.test("Lexer", async (t) => {
             [TokenType.NEWLINE],
             [TokenType.NOT],
             [TokenType.KEYWORD, "last"],
+            [TokenType.AND],
+            [TokenType.OR],
+            [TokenType.XOR],
+            [TokenType.GT],
+            [TokenType.LT],
+            [TokenType.GTE],
+            [TokenType.LTE],
+            [TokenType.EE],
+            [TokenType.NEE],
+            [TokenType.BITLEFT],
+            [TokenType.BITRIGHT],
+            [TokenType.BITRIGHTZERO],
             [TokenType.EOF],
         );
-        const tokens = Lexer.tokensFromLine("<stdin>", "(1+2-3*4 / 5 ** // % ) ; \n ! !!");
+        const tokens = Lexer.tokensFromLine("<stdin>", "(1+2-3*4 / 5 ** // % ) ; \n ! $ & | ^ > < >= <= == != << >> >>>");
         assertMatchingTokens(tokens, expectedResult);
     });
 

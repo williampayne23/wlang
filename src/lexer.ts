@@ -13,8 +13,8 @@ export default class Lexer {
     this.lastPos = this.pos.copy()
   }
 
-  advance() {
-    this.pos.advance()
+  advance(): string {
+    return this.pos.advance()
   }
 
   success(type: TokenType, value?: string|number) {
@@ -90,12 +90,60 @@ export default class Lexer {
         lexer.success(TokenType.CLOSEPAR);
       } else if (lexer.pos.nextChar == "=") {
         lexer.advance();
+        if(lexer.pos.nextChar == "="){
+          lexer.advance()
+          lexer.success(TokenType.EE)
+          continue
+        }
         lexer.success(TokenType.EQ);
-      } else if (lexer.pos.nextChar == "!") {
+      } else if(lexer.pos.nextChar == "<"){
+        lexer.pos.advance();
+        if(lexer.pos.nextChar == "<"){
+          lexer.advance()
+          lexer.success(TokenType.BITLEFT)
+          continue
+        }
+        if(lexer.pos.nextChar == "="){
+          lexer.advance()
+          lexer.success(TokenType.LTE)
+          continue
+        }
+        lexer.success(TokenType.LT)
+      } else if(lexer.pos.nextChar == ">"){
         lexer.advance();
-        if(lexer.pos.nextChar == "!"){
+        if(lexer.pos.nextChar == ">"){
+          lexer.advance()
+          if(lexer.pos.nextChar == ">"){
+            lexer.advance()
+            lexer.success(TokenType.BITRIGHTZERO)
+            continue
+          }
+          lexer.success(TokenType.BITRIGHT)
+          continue
+        }
+        if(lexer.pos.nextChar == "="){
+          lexer.advance()
+          lexer.success(TokenType.GTE)
+          continue
+        }
+        lexer.success(TokenType.GT)
+      } else if(lexer.pos.nextChar == "&"){
+        lexer.advance()
+        lexer.success(TokenType.AND)
+      } else if(lexer.pos.nextChar == "|"){
+        lexer.advance()
+        lexer.success(TokenType.OR)
+      } else if(lexer.pos.nextChar == "^"){
+        lexer.advance()
+        lexer.success(TokenType.XOR)
+      }else if(lexer.pos.nextChar == "$"){
+        lexer.advance()
+        lexer.success(TokenType.KEYWORD, "last")
+      }else if (lexer.pos.nextChar == "!") {
+        const char = lexer.advance();
+        if(char == "="){
           lexer.advance();
-          lexer.success(TokenType.KEYWORD, "last")
+          lexer.success(TokenType.NEE)
           continue
         }
         lexer.success(TokenType.NOT);

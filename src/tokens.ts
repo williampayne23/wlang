@@ -1,20 +1,5 @@
 import Position from "./position.ts";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export enum TokenType {
 PLUS,
 MINUS,
@@ -32,7 +17,19 @@ EQ,
 EOF,
 NEWLINE,
 TEMINAL,
-NOT
+NOT,
+EE,
+LTE,
+LT,
+GT,
+GTE,
+OR,
+AND,
+NEE,
+XOR,
+BITLEFT,
+BITRIGHTZERO,
+BITRIGHT
 }
 
 export enum Keywords {

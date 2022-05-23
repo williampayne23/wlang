@@ -23,7 +23,7 @@ export default class Position {
             this.col = 0;
             this.line++;
         }
-        return this;
+        return this.nextChar;
     }
 
     copy() {

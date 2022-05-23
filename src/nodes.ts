@@ -1,8 +1,8 @@
 import Context from "./context.ts";
-import { DivideByZeroError, InvalidOperationError, InvalidOperatorError, UndefinedVariableError } from "./errors.ts";
+import {  UndefinedVariableError } from "./errors.ts";
 import Position from "./position.ts";
-import { Token, TokenType } from "./tokens.ts";
-import { NullValue, NumberValue, OperatableValue, Value } from "./values.ts";
+import { Token } from "./tokens.ts";
+import { NullValue, NumberValue, Value } from "./values.ts";
 
 export abstract class Node {
     leftPos: Position;
@@ -66,56 +66,10 @@ export class BinOpNode extends Node {
     }
 
     visit(context: Context): Value {
-        const leftVal = this.leftNode.visit(context) as OperatableValue
-        const rightVal = this.rightNode.visit(context) as OperatableValue
+        const leftVal = this.leftNode.visit(context)
+        const rightVal = this.rightNode.visit(context)
 
-        if(!(leftVal instanceof OperatableValue)){
-            throw new InvalidOperatorError(this.token, leftVal);
-        }
-
-        if(!(rightVal instanceof OperatableValue)){
-            throw new InvalidOperatorError(this.token, rightVal);
-        }
-
-        if(this.token.isType([TokenType.POW])){
-            return leftVal.pow(rightVal)
-        }
-        if (this.token.isType([TokenType.MULTIPLY])) {
-            return leftVal.multiply(rightVal);
-        }
-        if (this.token.isType([TokenType.DIVIDE])) {
-            try {
-                return leftVal.divide(rightVal);
-            } catch {
-                throw new DivideByZeroError(this.token.start, this.rightPos);
-            }
-        }
-        if (this.token.isType([TokenType.FLOORDIVIDE])) {
-            try {
-                return leftVal.floorDivide(rightVal);
-            } catch {
-                throw new DivideByZeroError(this.token.start, this.rightPos);
-            }
-        }
-        if (this.token.isType([TokenType.MINUS])) {
-            return leftVal.minus(rightVal);
-        }
-        if (this.token.isType([TokenType.PLUS])) {
-            return leftVal.plus(rightVal);
-        }
-        if (this.token.isType([TokenType.MODULUS])) {
-            return leftVal.modulus(rightVal);    
-        }
-
-        throw new InvalidOperationError(this.token, [
-            TokenType.MINUS,
-            TokenType.PLUS,
-            TokenType.DIVIDE,
-            TokenType.MULTIPLY,
-            TokenType.FLOORDIVIDE,
-            TokenType.MODULUS,
-            TokenType.POW
-        ]);
+        return leftVal.performBinOperation(rightVal, this.token)
     }
 
     isEqualTo(node: Node): boolean {
@@ -145,15 +99,8 @@ export class UnOpNode extends Node {
     }
 
     visit(context: Context): Value {
-        const value = this.node.visit(context) as OperatableValue
-        if(!(value instanceof OperatableValue)){
-            throw new InvalidOperatorError(this.token, value)
-        }
-
-        if (this.token.isType([TokenType.MINUS])) {
-            return value.multiply(new NumberValue(-1));
-        }
-        throw new InvalidOperationError(this.token, [TokenType.MINUS]);
+        const value = this.node.visit(context) as Value
+        return value.performUnOperation(this.token)
     }
 
     isEqualTo(node: Node): boolean {

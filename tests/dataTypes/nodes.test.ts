@@ -1,5 +1,5 @@
 import { assertEquals, assertThrows } from "https://deno.land/std@0.140.0/testing/asserts.ts";
-import { InvalidOperationError } from "../../src/errors.ts";
+import { InvalidOperatorError } from "../../src/errors.ts";
 import Interpreter from "../../src/interpreter.ts";
 import { TokenType } from "../../src/tokens.ts";
 import { assertMatchingAST, assertTypeOf, makeASTUtility } from "../testHelpers.ts";
@@ -9,13 +9,13 @@ Deno.test("Nodes", async (t) => {
         try{
             Interpreter.visitNodes([makeASTUtility([TokenType.DIVIDE, [2]])]);
         }catch (e){
-            assertTypeOf(e, InvalidOperationError);
+            assertTypeOf(e, InvalidOperatorError);
         }
         
         try{
             Interpreter.visitNodes([makeASTUtility([[2], TokenType.IDENTIFIER, [2]])]);
         }catch (e){
-            assertTypeOf(e, InvalidOperationError);
+            assertTypeOf(e, InvalidOperatorError);
         }
     });
 

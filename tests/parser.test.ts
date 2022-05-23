@@ -131,6 +131,14 @@ Deno.test("Parser", async (t) => {
         await t.step("Multiple minus", () => {
             assertParseResult("---2", [TokenType.MINUS,[TokenType.MINUS, [TokenType.MINUS, [2]]]])
         });
+
+        await t.step("Single not", () => {
+            assertParseResult("!2", [TokenType.NOT, [2]])
+        });
+
+        await t.step("Multiple not", () => {
+            assertParseResult("!!!2", [TokenType.NOT,[TokenType.NOT, [TokenType.NOT, [2]]]])
+        });
     });
 
     await t.step("Variables", async (t) => {

@@ -10,8 +10,8 @@ Deno.test("Context", async (t) => {
         child.set("y", new NumberValue(8))
         const copy = child.copy()
 
-        assertEquals(copy.get("x"), parent.get("x"))
-        assertEquals(copy.get("y"), child.get("y"))
+        assertEquals(copy.get("x").value, parent.get("x").value)
+        assertEquals(copy.get("y").value, child.get("y").value)
 
     })
 })

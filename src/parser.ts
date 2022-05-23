@@ -33,7 +33,20 @@ export default class Parser {
             return new VarAsignmentNode(token, this.expr())
             
         }
+        return this.binOp(this.compexpr.bind(this), [TokenType.AND, TokenType.OR, TokenType.XOR, TokenType.BITLEFT, TokenType.BITRIGHT, TokenType.BITRIGHTZERO], this.compexpr.bind(this));
+    }
+
+    compexpr(): Node{
+        const token = this.currentToken
+        if(this.expectTokenAndPass(TokenType.NOT)){
+            return new UnOpNode(token, this.compexpr())
+        }
+        return this.binOp(this.arithexpr.bind(this), [TokenType.LT, TokenType.GT, TokenType.GTE, TokenType.LTE, TokenType.EE, TokenType.NEE], this.arithexpr.bind(this));
+    }
+
+    arithexpr(): Node{
         return this.binOp(this.term.bind(this), [TokenType.PLUS, TokenType.MINUS], this.term.bind(this));
+
     }
 
     term(): Node {

@@ -4,11 +4,20 @@ import Lexer from "./lexer.ts";
 import Parser from "./parser.ts";
 
 import { parse } from "https://deno.land/std@0.140.0/flags/mod.ts";
+import { BooleanValue, NullValue, NumberValue } from "./values.ts";
 
 main();
 
 async function main() {
     let globalContext = new Context("Global");
+
+    globalContext.set("true", new BooleanValue(true))
+    globalContext.set("false", new BooleanValue(false))
+    globalContext.set("null", new NullValue())
+    globalContext.set("pi", new NumberValue(Math.PI))
+    globalContext.set("tau", new NumberValue(Math.PI/2))
+
+
     const args = parse(Deno.args);
 
     if (args["_"].length != 0) {
