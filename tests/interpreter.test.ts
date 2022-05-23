@@ -41,12 +41,26 @@ Deno.test("Interpreter", async (t) => {
             const [value, ] = interpretLine("-1");
             assertEquals(value, new NumberValue(-1));
         });
+
+        await t.step("Power", () => {
+            const [value, ] = interpretLine("2**3");
+            assertEquals(value, new NumberValue(8));
+        });
+
+        await t.step("Floor Divide", () => {
+            const [value, ] = interpretLine("3 // 2");
+            assertEquals(value, new NumberValue(1));
+        });
+
+        await t.step("Modulus", () => {
+            const [value, ] = interpretLine("9 % 2");
+            assertEquals(value, new NumberValue(1));
+        });
     });
 
     await t.step("Variables", () => {
         const [, context] = interpretLine("let x = 4")
         assertEquals(context.get("x"), new NumberValue(4))
-
         const [value, ] = interpretLine("x", context)
         assertEquals(value, new NumberValue(4))
     })
@@ -55,6 +69,12 @@ Deno.test("Interpreter", async (t) => {
         await t.step("Divide by zero", () => {
             try{
                 interpretLine("4 / 0");
+            }catch (e) {
+                assertTypeOf(e, DivideByZeroError);
+            }
+
+            try{
+                interpretLine("4 // 0");
             }catch (e) {
                 assertTypeOf(e, DivideByZeroError);
             }

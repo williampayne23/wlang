@@ -56,6 +56,9 @@ export class BinOpNode implements Node {
     }
 
     visit(context: Context): Value {
+        if(this.token.isType([TokenType.POW])){
+            return this.leftNode.visit(context).pow(this.rightNode.visit(context))
+        }
         if (this.token.isType([TokenType.MULTIPLY])) {
             return this.leftNode.visit(context).multiply(this.rightNode.visit(context));
         }
@@ -66,17 +69,31 @@ export class BinOpNode implements Node {
                 throw new DivideByZeroError(this.token.start, this.rightPos);
             }
         }
+        if (this.token.isType([TokenType.FLOORDIVIDE])) {
+            try {
+                return this.leftNode.visit(context).floorDivide(this.rightNode.visit(context));
+            } catch {
+                throw new DivideByZeroError(this.token.start, this.rightPos);
+            }
+        }
         if (this.token.isType([TokenType.MINUS])) {
             return this.leftNode.visit(context).minus(this.rightNode.visit(context));
         }
         if (this.token.isType([TokenType.PLUS])) {
             return this.leftNode.visit(context).plus(this.rightNode.visit(context));
         }
+        if (this.token.isType([TokenType.MODULUS])) {
+            return this.leftNode.visit(context).modulus(this.rightNode.visit(context));    
+        }
+
         throw new InvalidOperationError(this.token, [
             TokenType.MINUS,
             TokenType.PLUS,
             TokenType.DIVIDE,
             TokenType.MULTIPLY,
+            TokenType.FLOORDIVIDE,
+            TokenType.MODULUS,
+            TokenType.POW
         ]);
     }
 

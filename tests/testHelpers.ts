@@ -1,5 +1,7 @@
-import { AssertionError } from "https://deno.land/std@0.140.0/testing/asserts.ts";
+import { assertEquals, AssertionError } from "https://deno.land/std@0.140.0/testing/asserts.ts";
+import Lexer from "../src/lexer.ts";
 import { BinOpNode, Node, NumberNode, UnOpNode, VarAsignmentNode, VarRetrievalNode } from "../src/nodes.ts";
+import Parser from "../src/parser.ts";
 import Position from "../src/position.ts";
 import { Token, TokenType } from "../src/tokens.ts";
 
@@ -27,6 +29,23 @@ export function assertMatchingTokens(tokenArray: Token[], expTokenArray: Token[]
     }
     if (tokenArray.length > expTokenArray.length) {
         throw new AssertionError(`Expected no more tokens, Found: ${tokenArray[expTokenArray.length]}`);
+    }
+}
+
+export function assertParseResult(text: string, result: nodeSpec){
+    const tokens = Lexer.tokensFromLine("<stdin>", text);
+    const tree = Parser.parseTokens(tokens);
+    const expectedTree = makeASTUtility(result);
+    assertMatchingAST(tree, expectedTree);
+}
+
+export function assertParseError(text: string, error: any, nextChar?: string){
+    try {
+        const tokens = Lexer.tokensFromLine("<stdin>", text);
+        Parser.parseTokens(tokens);
+    } catch (e) {
+        assertTypeOf(e, error);
+        if(nextChar) assertEquals(e?.posStart?.nextChar, nextChar);
     }
 }
 

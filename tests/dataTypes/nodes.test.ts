@@ -7,13 +7,13 @@ import { assertMatchingAST, assertTypeOf, makeASTUtility } from "../testHelpers.
 Deno.test("Nodes", async (t) => {
     await t.step("Invalid Operation Error", () => {
         try{
-            Interpreter.visit(makeASTUtility([TokenType.DIVIDE, [2]]));
+            Interpreter.visitNode(makeASTUtility([TokenType.DIVIDE, [2]]));
         }catch (e){
             assertTypeOf(e, InvalidOperationError);
         }
         
         try{
-            Interpreter.visit(makeASTUtility([[2], TokenType.IDENTIFIER, [2]]));
+            Interpreter.visitNode(makeASTUtility([[2], TokenType.IDENTIFIER, [2]]));
         }catch (e){
             assertTypeOf(e, InvalidOperationError);
         }

@@ -37,7 +37,11 @@ export default class Parser {
     }
 
     term(): Node {
-        return this.binOp(this.factor.bind(this), [TokenType.MULTIPLY, TokenType.DIVIDE], this.factor.bind(this));
+        return this.binOp(this.power.bind(this), [TokenType.MULTIPLY, TokenType.DIVIDE, TokenType.FLOORDIVIDE, TokenType.MODULUS], this.power.bind(this));
+    }
+
+    power(): Node {
+        return this.binOp(this.factor.bind(this), [TokenType.POW], this.factor.bind(this))
     }
 
     binOp(leftTerm: () => Node, allowedOperators: TokenType[], rightTerm: () => Node): Node {

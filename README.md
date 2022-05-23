@@ -26,6 +26,12 @@ TODO; Allow people to execute files
 
 `1 / 1` (= `1`)
 
+`2 ** 3` (= `8`)
+
+`3 % 2` (= `1`) (Modulo operator)
+
+`3 // 2` (= `1`) (Floor division operator)
+
 You can use parentheses to change order of operations.
 
 ### Variable assignment:
@@ -43,11 +49,13 @@ Use a variable:
 ## Grammar
 
     expression  
-            : term ((PLUS | MINUS) term)*
-            : IDENT:let EQ expression
+            : term ((PLUS | MINUS ) term)*
+            : KEYWORD:let IDENTIFIER EQ expression
 
     term        
-            : factor ((MULT | DIV) factor)*
+            : power ((MULT | DIV | FLOORDIV | MODULO) power)*
+            
+    power   : factor (POW) factor
 
     factor      
             : NUMBER

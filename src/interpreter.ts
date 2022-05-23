@@ -7,7 +7,7 @@ export default class Interpreter {
         if(node == undefined){
             throw new NoNodeError()
         }
-        const context = globalContext ?? new Context("<anon>")
+        const context = globalContext? globalContext.copy() : new Context("<anon>")
         return [node.visit(context), context]
     }
 }

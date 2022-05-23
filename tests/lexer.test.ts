@@ -18,10 +18,13 @@ Deno.test("Lexer", async (t) => {
             [TokenType.NUMBER, 4],
             [TokenType.DIVIDE],
             [TokenType.NUMBER, 5],
+            [TokenType.POW],
+            [TokenType.FLOORDIVIDE],
+            [TokenType.MODULUS],
             [TokenType.CLOSEPAR],
             [TokenType.EOF],
         );
-        const tokens = Lexer.tokensFromLine("<stdin>", "(1+2-3*4 / 5 )");
+        const tokens = Lexer.tokensFromLine("<stdin>", "(1+2-3*4 / 5 ** // % )");
         assertMatchingTokens(tokens, expectedResult);
     });
 

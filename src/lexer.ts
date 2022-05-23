@@ -65,10 +65,23 @@ export default class Lexer {
         lexer.success(TokenType.MINUS);
       } else if (lexer.pos.nextChar == "/") {
         lexer.advance();
+        if(lexer.pos.nextChar == "/"){
+          lexer.advance();
+          lexer.success(TokenType.FLOORDIVIDE)
+          continue
+        }
         lexer.success(TokenType.DIVIDE);
       } else if (lexer.pos.nextChar == "*") {
         lexer.advance();
+        if(lexer.pos.nextChar == "*"){
+          lexer.advance();
+          lexer.success(TokenType.POW)
+          continue
+        }
         lexer.success(TokenType.MULTIPLY);
+      } else if (lexer.pos.nextChar == "%") {
+        lexer.advance();
+        lexer.success(TokenType.MODULUS);
       } else if (lexer.pos.nextChar == "(") {
         lexer.advance();
         lexer.success(TokenType.OPENPAR);
