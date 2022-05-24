@@ -10,8 +10,13 @@ Deno.test("Parser", async (t) => {
 
     await t.step("Newlines", () => {
         assertParseResult("last", [""])
+        assertParseResult("$", [""])
         assertParseResult("1\n", [1])
         assertParseResult("1;", [1])
+    })
+
+    await t.step("Local Scope", () => {
+        assertParseResult("{\n\n2;\n\n}", [{anonymous: [[2]]}])
     })
 
     await t.step("Order of Operations", async (t) => {

@@ -1,9 +1,18 @@
-import { assertEquals, AssertionError } from "https://deno.land/std@0.140.0/testing/asserts.ts";
+import { assert, assertEquals, AssertionError } from "https://deno.land/std@0.140.0/testing/asserts.ts";
+import Context from "../src/context.ts";
+import Interpreter from "../src/interpreter.ts";
 import Lexer from "../src/lexer.ts";
-import { BinOpNode, Node, NumberNode, UnOpNode, VarAsignmentNode, VarRetrievalNode } from "../src/nodes.ts";
+import BinOpNode from "../src/nodes/binOpNode.ts";
+import Node from "../src/nodes/node.ts";
+import NumberNode from "../src/nodes/numberNode.ts";
+import ScopeNode from "../src/nodes/scopeNode.ts";
+import UnOpNode from "../src/nodes/unOpNode.ts";
+import VarAsignmentNode from "../src/nodes/varAssignNode.ts";
+import VarRetrievalNode from "../src/nodes/varRetrievalNode.ts";
 import Parser from "../src/parser.ts";
 import Position from "../src/position.ts";
 import { Token, TokenType } from "../src/tokens.ts";
+import Value from "../src/values/value.ts";
 
 // deno-lint-ignore no-explicit-any
 export function assertTypeOf(object: any, type: any) {
@@ -32,46 +41,83 @@ export function assertMatchingTokens(tokenArray: Token[], expTokenArray: Token[]
     }
 }
 
-export function assertParseResult(text: string, result: nodeSpec){
+export function assertParseResult(text: string, result: nodeSpec) {
     const tokens = Lexer.tokensFromLine("<stdin>", text);
     const tree = Parser.parseTokens(tokens);
     const expectedTree = makeASTUtility(result);
-    assertMatchingAST(tree[0], expectedTree);
+    assertMatchingAST(tree, expectedTree);
 }
 
 // deno-lint-ignore no-explicit-any
-export function assertParseError(text: string, error: any, nextChar?: string){
+export function assertParseError(text: string, error: any, nextChar?: string) {
     try {
         const tokens = Lexer.tokensFromLine("<stdin>", text);
         Parser.parseTokens(tokens);
     } catch (e) {
         assertTypeOf(e, error);
-        if(nextChar) assertEquals(e?.posStart?.nextChar, nextChar);
+        if (nextChar) assertEquals(e?.posStart?.nextChar, nextChar);
     }
 }
 
+export function assertEqualValues(value1: Value, value2: Value) {
+    const dummyPos = new Position(0, 0, 0, "", "");
+    assert(value1.performBinOperation(value2, new Token(TokenType.EE, dummyPos, dummyPos)).value);
+}
+
+export function assertRuntimeResult(nodeSpec: nodeSpec, value: Value, inContext?: Context): Context {
+    const node = makeASTUtility(nodeSpec);
+    node.openScope();
+    const context = inContext ?? Interpreter.newGlobalContext();
+    const outValue = node.evaluate(context);
+    assertEqualValues(outValue, value);
+    return context;
+}
+
+// deno-lint-ignore no-explicit-any
+export function assertNodeError(nodeSpec: nodeSpec, error: any) {
+    const node = makeASTUtility(nodeSpec);
+    try {
+        node.evaluate(Interpreter.newGlobalContext());
+    } catch (e) {
+        assertTypeOf(e, error);
+    }
+}
 
 type binOpSpec = [nodeSpec, TokenType, nodeSpec];
 type singleNodeSpec = [number | string];
 type unOpSpec = [TokenType | string, nodeSpec];
-type nodeSpec = (binOpSpec | singleNodeSpec | unOpSpec);
+type scopeSpec = [Record<string, ([nodeSpec] | [])>];
+type nodeSpec = (scopeSpec | binOpSpec | singleNodeSpec | unOpSpec);
 
-export function makeASTUtility(spec: nodeSpec): Node {
+export function makeASTUtility(spec: nodeSpec): ScopeNode {
+    const node = makeInnerNodes(spec);
+    return new ScopeNode("global", [node]);
+}
+
+function makeInnerNodes(spec: nodeSpec): Node {
     const dummyPos = new Position(0, 0, 0, "", "");
     if (spec.length == 3) {
         spec = spec as binOpSpec;
-        return new BinOpNode(makeASTUtility(spec[0]), new Token(spec[1], dummyPos, dummyPos), makeASTUtility(spec[2]));
+        return new BinOpNode(makeInnerNodes(spec[0]), new Token(spec[1], dummyPos, dummyPos), makeInnerNodes(spec[2]));
     }
     if (spec.length == 2) {
         spec = spec as unOpSpec;
-        if (typeof spec[0] == 'string'){
-            return new VarAsignmentNode(new Token(TokenType.IDENTIFIER, dummyPos, dummyPos, spec[0]), makeASTUtility(spec[1]))
+        if (typeof spec[0] == "string") {
+            return new VarAsignmentNode(
+                new Token(TokenType.IDENTIFIER, dummyPos, dummyPos, spec[0]),
+                makeInnerNodes(spec[1]),
+            );
         }
-        return new UnOpNode(new Token(spec[0], dummyPos, dummyPos), makeASTUtility(spec[1]));
+        return new UnOpNode(new Token(spec[0], dummyPos, dummyPos), makeInnerNodes(spec[1]));
     }
-    if(typeof spec[0] == "string"){
-        return new VarRetrievalNode(new Token(TokenType.IDENTIFIER, dummyPos, dummyPos, spec[0]))
+    if (typeof spec[0] == "string") {
+        return new VarRetrievalNode(new Token(TokenType.IDENTIFIER, dummyPos, dummyPos, spec[0]));
     }
+    if (typeof spec[0] == "object") {
+        const name = Object.keys(spec[0])[0];
+        return new ScopeNode(name, spec[0][name].map(makeInnerNodes));
+    }
+
     return new NumberNode(new Token(TokenType.NUMBER, dummyPos, dummyPos, spec[0]));
 }
 

@@ -88,6 +88,12 @@ export default class Lexer {
       } else if (lexer.pos.nextChar == ")") {
         lexer.advance();
         lexer.success(TokenType.CLOSEPAR);
+      } else if (lexer.pos.nextChar == "{") {
+        lexer.advance();
+        lexer.success(TokenType.OPENBRACE);
+      } else if (lexer.pos.nextChar == "}") {
+        lexer.advance();
+        lexer.success(TokenType.CLOSEBRACE);
       } else if (lexer.pos.nextChar == "=") {
         lexer.advance();
         if(lexer.pos.nextChar == "="){

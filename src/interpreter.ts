@@ -1,21 +1,47 @@
 import Context from "./context.ts";
-import { NoNodeError } from "./errors.ts";
-import { Node } from "./nodes.ts";
-import { Value } from "./values.ts";
+import Lexer from "./lexer.ts";
+import Node from "./nodes/node.ts";
+import Parser from "./parser.ts";
+import BooleanValue from "./values/booleanValue.ts";
+import NullValue from "./values/nullValue.ts";
+import NumberValue from "./values/numberValue.ts";
+import Value from "./values/value.ts";
 export default class Interpreter {
-    static visitNodes(nodes: Node[], globalContext?: Context) : [Value, Context]{
-        if(nodes.length <= 0){
-            throw new NoNodeError()
+
+    context: Context;
+
+    constructor(context?: Context){
+        this.context = context ?? Interpreter.newGlobalContext()
+    }
+
+    visitNode(node: Node) : Value{
+        const result = node.evaluate(this.context)
+        return result
+    }
+
+    static newGlobalContext(): Context{
+        const globalContext = new Context("global")
+        globalContext.set("true", new BooleanValue(true))
+        globalContext.set("false", new BooleanValue(false))
+        globalContext.set("null", new NullValue())
+        globalContext.set("pi", new NumberValue(Math.PI))
+        globalContext.set("tau", new NumberValue(Math.PI/2))
+        return globalContext
+    }
+
+    executeCode(source: string, code: string) : Value {
+        try {
+            //Lexer
+            const tokens = Lexer.tokensFromLine(source, code);
+            //Parser
+            const parseRes = Parser.parseTokens(tokens);
+            //Interpreter
+            const result = this.visitNode(parseRes);
+            if(!result.isNull()) console.log(`${result}`);
+            return result
+        } catch (e) {
+            console.log(`${e}`);
+            return new NullValue()
         }
-        const context = globalContext? globalContext.copy() : new Context("<anon>")
-
-        let result: Value
-        result = nodes[0].evaluate(context)
-
-        for(let i = 1; i<nodes.length; i++){
-            result = nodes[i].evaluate(context)
-        }
-
-        return [result, context]
     }
 }

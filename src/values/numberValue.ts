@@ -1,57 +1,9 @@
-import { DivideByZeroError, InvalidOperatorError } from "./errors.ts";
-import { Token, TokenType } from "./tokens.ts";
-export abstract class Value {
-    // deno-lint-ignore no-explicit-any
-    value: any;
-    allowedBinOperations: Partial<Record<TokenType, (a:Value, b:Value, token:Token) => Value>> = {}
-    allowedUnOperations: Partial<Record<TokenType, (a:Value, token:Token) => Value>> = {}
-    declareIsAllowed(token: Token) {
-        if (!(token.type in this.allowedBinOperations)) {
-            throw new InvalidOperatorError(token, this);
-        }
-    }
+import { DivideByZeroError } from "../errors.ts";
+import { TokenType,Token } from "../tokens.ts";
+import BooleanValue from "./booleanValue.ts";
+import Value from "./value.ts";
 
-    performBinOperation(b: Value, token: Token): Value{
-        const operation = this.allowedBinOperations[token.type]
-        if(operation == null){
-            throw new InvalidOperatorError(token, this);
-        }
-        b?.declareIsAllowed(token)
-        return operation(this, b, token)
-    }
-
-    performUnOperation(token: Token): Value{
-        const operation = this.allowedUnOperations[token.type]
-        if(operation == null){
-            throw new InvalidOperatorError(token, this);
-        }
-        return operation(this, token)
-    }
-
-    isNull() {
-        return false;
-    }
-
-    toString(): string {
-        return `${this.value}`;
-    }
-
-    abstract copy(): Value;
-}
-
-export class NullValue extends Value {
-    toString(): string {
-        return "NULL";
-    }
-    isNull() {
-        return true;
-    }
-    copy() {
-        return new NullValue();
-    }
-}
-
-export class NumberValue extends Value {
+export default class NumberValue extends Value {
 
     value: number;
 
@@ -137,42 +89,6 @@ export class NumberValue extends Value {
         [TokenType.NOT](a: Value): Value{
             return new NumberValue(~a.value)
         }
-    }
-
-}
-
-export class BooleanValue extends Value {
-    value: boolean
-
-    constructor(value: boolean){
-        super()
-        this.value = value
-    }
-
-    allowedBinOperations = {
-        [TokenType.AND](a: Value, b: Value): Value{
-            return new BooleanValue(a.value && b.value)
-        },
-        [TokenType.OR](a: Value, b: Value): Value{
-            return new BooleanValue(a.value || b.value)
-        },
-        [TokenType.XOR](a: Value, b: Value): Value{
-            return new BooleanValue((a.value ^ b.value) == 1)
-        }
-    }
-
-    allowedUnOperations = {
-        [TokenType.NOT](a: Value): Value{
-            return new BooleanValue(!a.value)
-        }
-    }
-
-    toString(){
-        return `${this.value}`
-    }
-
-    copy(): Value {
-        return new BooleanValue(this.value)
     }
 
 }

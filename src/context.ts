@@ -1,33 +1,5 @@
-import { NullValue, Value } from "./values.ts";
-
-    // public static deepCopy<T>(source: T): T {
-    //     return Array.isArray(source)
-    //         ? source.map((item) => this.deepCopy(item))
-    //         : source instanceof Date
-    //         ? new Date(source.getTime())
-    //         : source && typeof source === "object"
-    //         ? Object.getOwnPropertyNames(source).reduce((o, prop) => {
-    //             Object.defineProperty(o, prop, Object.getOwnPropertyDescriptor(source, prop)!);
-    //             o[prop] = this.deepCopy((source as { [key: string]: any })[prop]);
-    //             return o;
-    //         }, Object.create(Object.getPrototypeOf(source)))
-    //         : source as T;
-    // }
-
-
-// function deepCopy<T>(source: Record<string, Value>): T {
-//     Object.getOwnPropertyNames(source).reduce((o, prop) => {
-//         Object.defineProperty(o, prop, Object.getOwnPropertyDescriptor(source, prop)!);
-//         o[prop] = deepCopy(source[prop])
-//     }, Object.create(Object.getPrototypeOf(source)))
-//     return source && typeof source === "object"
-//         ? Object.getOwnPropertyNames(source).reduce((o, prop) => {
-//             Object.defineProperty(o, prop, Object.getOwnPropertyDescriptor(source, prop)!);
-//             o[prop] = deepCopy((source as { [key: string]: any })[prop]);
-//             return o;
-//         }, Object.create(Object.getPrototypeOf(source)))
-//         : source as T;
-// }
+import NullValue from "./values/nullValue.ts";
+import Value from "./values/value.ts";
 
 export default class Context {
     name: string;

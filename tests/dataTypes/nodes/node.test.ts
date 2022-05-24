@@ -1,23 +1,13 @@
-import { assertEquals, assertThrows } from "https://deno.land/std@0.140.0/testing/asserts.ts";
-import { InvalidOperatorError } from "../../src/errors.ts";
-import Interpreter from "../../src/interpreter.ts";
-import { TokenType } from "../../src/tokens.ts";
-import { assertMatchingAST, assertTypeOf, makeASTUtility } from "../testHelpers.ts";
+import { assert, assertEquals, assertThrows } from "https://deno.land/std@0.140.0/testing/asserts.ts";
+import Context from "../../../src/context.ts";
+import { TokenType } from "../../../src/tokens.ts";
+import { assertMatchingAST, makeASTUtility } from "../../testHelpers.ts";
 
 Deno.test("Nodes", async (t) => {
-    await t.step("Invalid Operation Error", () => {
-        try{
-            Interpreter.visitNodes([makeASTUtility([TokenType.DIVIDE, [2]])]);
-        }catch (e){
-            assertTypeOf(e, InvalidOperatorError);
-        }
-        
-        try{
-            Interpreter.visitNodes([makeASTUtility([[2], TokenType.IDENTIFIER, [2]])]);
-        }catch (e){
-            assertTypeOf(e, InvalidOperatorError);
-        }
-    });
+
+    const node = makeASTUtility([2])
+    node.dontReturnValue()
+    assert(node.evaluate(new Context("")).isNull())
 
     await t.step("Non matching nodes aren't equal", () => {
         assertThrows(() =>
@@ -30,10 +20,11 @@ Deno.test("Nodes", async (t) => {
         assertThrows(() => assertMatchingAST(makeASTUtility([2]), makeASTUtility([[1], TokenType.PLUS, [2]])));
         assertThrows(() => assertMatchingAST(makeASTUtility(["d", [2]]), makeASTUtility([[1], TokenType.PLUS, [2]])));
         assertThrows(() => assertMatchingAST(makeASTUtility(["d"]), makeASTUtility([[1], TokenType.PLUS, [2]])));
+        assertThrows(() => assertMatchingAST(makeASTUtility([{scope: [[2]]}]), makeASTUtility([2])));
     });
 
     await t.step("String repr", () => {
         const expectedTree = makeASTUtility([[1], TokenType.PLUS, [TokenType.MINUS, [2]]]);
-        assertEquals(expectedTree.toString(), "(<NUMBER: 1> <PLUS> (<MINUS> <NUMBER: 2>))");
+        assertEquals(expectedTree.toString(), "{global: (<NUMBER: 1> <PLUS> (<MINUS> <NUMBER: 2>))}");
     });
 });

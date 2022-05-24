@@ -1,7 +1,7 @@
 import Context from "./context.ts";
 import Position from "./position.ts";
 import { Token, TokenType } from "./tokens.ts";
-import { Value } from "./values.ts";
+import Value from "./values/value.ts";
 
 export class WLANGError {
     details: string;

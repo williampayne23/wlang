@@ -1,6 +1,6 @@
 import { assertEquals } from "https://deno.land/std@0.140.0/testing/asserts.ts";
 import Context from "../../src/context.ts";
-import { NumberValue } from "../../src/values.ts";
+import NumberValue from "../../src/values/numberValue.ts";
 
 Deno.test("Context", async (t) => {
     await t.step("Copy copies parent", () => {

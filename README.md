@@ -91,14 +91,61 @@ last
 
 Will return 14.
 
+### Scoping
+
+You can define a scope with curly braces `{ }` anything within that scope will have access to it's own variables
+
+```
+let x = 3
+{
+        x (Will return errror)
+        x = 4;
+        x (Will return 4)
+}
+x (Will return 3)
+
+```
+
 ## Grammar
 
-        line    
-                : expression SEMICOLON? ( NEWLINE | EOF)
+At the highest level, the parcer will first attempt to find a scope with EOF marking the end of the scope
+
+        global-scope    
+                : (expression (SEMICOLON | NEWLINE | EOF) NEWLINE*)+ EOF
+
+        scope    
+                : (expression SEMICOLON? ( NEWLINE* | CLOSEBRACE))+ CLOSEBRACE
 
         expression  
-                : KEYWORD:let IDENTIFIER EQ expression
+                : OPENBRACE scope
+                : KEYWORD:let assignment
+        TODO    : KEYWORD:function function
+        TODO    : KEYWORD:if if  
+        TODO    : KEYWORD:for for 
+        TODO    : KEYWORD:while while 
+        TODO    : KEYWORD:do do-while 
                 : comp-expr ((AND | OR) comp-expr)*
+
+        function
+        TODO    : OPENPAREN IDENTIFIER (IDENTIFIER? (COMMA IDENTIFIER)*) CLOSEPAREN scope
+        TODO    : OPENPAREN IDENTIFIER (IDENTIFIER? (COMMA IDENTIFIER)*) CLOSEPAREN ARROW expression
+
+        if      
+        TODO    : expression scope (elif expression scope)* (else scope)?
+        TODO    : expression then expression (elif expression then expression)* (else expression)?
+
+        for     
+        TODO    : OPENPAREN KEYWORD:let asignment; comp-expr; assignment CLOSEPAREN scope
+
+        while   
+        TODO    : OPENPAREN comp-expr CLOSEPAREN scope
+        
+        do-while
+        TODO    : scope while OPENPAREN comp-expr CLOSEPAREN
+
+
+        asignment
+                : IDENTIFIER EQ expression
 
         comp-expr
                 : NOT comp-expr
@@ -115,10 +162,14 @@ Will return 14.
 
         factor      
                 : NUMBER
+        TODO    : function-call
                 : IDENTIFIER
                 : KEYWORD:last | !!
                 : (MINUS) factor
                 : (LEFTPAREN) expr (RIGHTPAREN)
+
+        function-call
+        TODO    : IDENTIFIER OPENPAREN expression? (COMMA expression)* CLOSEPAREN 
 
 
 
