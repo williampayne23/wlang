@@ -18,6 +18,10 @@ If you want to enter the REPL after executing the file you can with `yarn start 
 
 
 ## Syntax
+### Commenting
+
+All lines beginning with a single `#` will be ignored.
+Typing `###` will start a multiline comment until the next occurance of `###`
 
 ### Simple arithmatic: 
 

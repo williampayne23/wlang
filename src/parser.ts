@@ -193,6 +193,10 @@ export default class Parser {
     }
 
     generateAST(): Node {
+        const token = this.currentToken;        
+        if(this.expectTokenAndPass(TokenType.EOF)){
+            return new ScopeNode("global", [new VarRetrievalNode(new Token(TokenType.IDENTIFIER, token.start, token.end, "null"))])
+        }
         const response = this.globalScope()
         return response;
     }

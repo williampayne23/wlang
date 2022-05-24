@@ -24,7 +24,7 @@ export class WLANGError {
             }
             out += line + "\n"
             let underlineLength = this.posEnd.col - this.posStart.col
-            underlineLength = underlineLength? underlineLength : 1;
+            underlineLength = underlineLength && underlineLength >= 0? underlineLength : 1;
             out += " ".repeat(this.posStart.col) + "^".repeat(underlineLength)
             return out
         }

@@ -53,11 +53,39 @@ export default class Lexer {
     }
     return [TokenType.IDENTIFIER, name];
   }
-  
+
   static tokensFromLine(file: string, line: string): Token[] {
     const lexer = new Lexer(file, line);
+    let comment = false
     while (lexer.pos.nextChar !== "") {
-      if (lexer.pos.nextChar == "+") {
+      if(comment){
+        if(lexer.pos.nextChar == "#"){
+          lexer.advance();
+          if(lexer.pos.nextChar == "#"){
+            lexer.advance();
+            if(lexer.pos.nextChar == "#"){
+              lexer.advance();
+              comment = false
+            }
+          }
+        }
+        lexer.advance()
+        continue
+      }
+      if(lexer.pos.nextChar == "#"){
+        lexer.advance();
+        if(lexer.pos.nextChar == "#"){
+          lexer.advance();
+          if(lexer.pos.nextChar == "#"){
+            lexer.advance();
+            comment = true
+          }
+        }else{
+          while (lexer.pos.nextChar != "\n" && lexer.pos.nextChar != "" ){
+            lexer.advance();
+          } 
+        }
+      }else if (lexer.pos.nextChar == "+") {
         lexer.advance();
         lexer.success(TokenType.PLUS);
       } else if (lexer.pos.nextChar == "-") {

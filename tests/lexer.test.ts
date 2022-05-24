@@ -44,6 +44,15 @@ Deno.test("Lexer", async (t) => {
         assertMatchingTokens(tokens, expectedResult);
     });
 
+    await t.step("Comments", () => {
+        let tokens = Lexer.tokensFromLine("<stdin>", "# Hello");
+        assertMatchingTokens(tokens, makeTokensUtility([TokenType.EOF]))
+
+
+        tokens = Lexer.tokensFromLine("<stdin>", "###\nHello\n###");
+        assertMatchingTokens(tokens, makeTokensUtility([TokenType.EOF]))
+    });
+
     await t.step("Illegal character error", () => {
         try{
             Lexer.tokensFromLine("<stdin>", ".");

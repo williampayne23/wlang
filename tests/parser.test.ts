@@ -13,6 +13,7 @@ Deno.test("Parser", async (t) => {
         assertParseResult("$", [""])
         assertParseResult("1\n", [1])
         assertParseResult("1;", [1])
+        assertParseResult("#Hello", ["null"])
     })
 
     await t.step("Local Scope", () => {
