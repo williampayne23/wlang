@@ -33,11 +33,12 @@ export default class ScopeNode extends Node {
 
     visit(context: Context): Value {
         const localContext = this.isClosed? new Context(this.name, context) : context;
-        let value = new NullValue();
+        let value: Value = new NullValue();
         for (let i = 0; i < this.nodes.length; i++) {
             value = this.nodes[i].evaluate(localContext);
+            //this.nodes[i].evaluate(localContext);
         }
-        return value;
+        return this.isClosed? new NullValue() : value;
     }
 
     toString() {

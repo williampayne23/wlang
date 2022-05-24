@@ -1,4 +1,4 @@
-import { UnexpectedTokenError } from "../src/errors.ts";
+import { UnexpectedEndOfFile, UnexpectedTokenError } from "../src/errors.ts";
 import { TokenType } from "../src/tokens.ts";
 import { assertParseError, assertParseResult } from "./testHelpers.ts";
 
@@ -159,7 +159,7 @@ Deno.test("Parser", async (t) => {
 
     await t.step("Unexpected Tokens", async (t) => {
         await t.step("No close bracket", () => {
-            assertParseError("(1", UnexpectedTokenError, "")
+            assertParseError("(1", UnexpectedEndOfFile, "")
         });
 
         await t.step("No expr in bracket", () => {

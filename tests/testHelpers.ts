@@ -61,7 +61,11 @@ export function assertParseError(text: string, error: any, nextChar?: string) {
 
 export function assertEqualValues(value1: Value, value2: Value) {
     const dummyPos = new Position(0, 0, 0, "", "");
-    assert(value1.performBinOperation(value2, new Token(TokenType.EE, dummyPos, dummyPos)).value);
+    try {
+        assert(value1.performBinOperation(value2, new Token(TokenType.EE, dummyPos, dummyPos)).value);
+    } catch {
+        throw new AssertionError(`Expected ${value2} got ${value1}`)
+    }
 }
 
 export function assertRuntimeResult(nodeSpec: nodeSpec, value: Value, inContext?: Context): Context {

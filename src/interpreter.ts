@@ -1,4 +1,5 @@
 import Context from "./context.ts";
+import { UnexpectedEndOfFile } from "./errors.ts";
 import Lexer from "./lexer.ts";
 import Node from "./nodes/node.ts";
 import Parser from "./parser.ts";
@@ -29,7 +30,8 @@ export default class Interpreter {
         return globalContext
     }
 
-    executeCode(source: string, code: string) : Value {
+    executeCode(source: string, code: string, repl?: boolean) : Value {
+        repl = repl ?? false
         try {
             //Lexer
             const tokens = Lexer.tokensFromLine(source, code);
@@ -40,6 +42,10 @@ export default class Interpreter {
             if(!result.isNull()) console.log(`${result}`);
             return result
         } catch (e) {
+            if(e instanceof UnexpectedEndOfFile && repl){
+                const extendLine = prompt(" ") ?? ""
+                return this.executeCode(source, code + "\n" + extendLine, repl)
+            }
             console.log(`${e}`);
             return new NullValue()
         }

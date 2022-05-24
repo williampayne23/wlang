@@ -19,7 +19,7 @@ async function main() {
     while (args["r"] || args["repl"] || args["_"].length == 0) {
         const line = prompt(">");
         if (line) {
-            interpreter.executeCode("<stdin>", line);
+            interpreter.executeCode("<stdin>", line, true);
         }
     }
 }

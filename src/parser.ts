@@ -38,11 +38,24 @@ export default class Parser {
 
     scope(name:string, terminator: TokenType): ScopeNode {
         const nodes: Node[] = [];
+
+        //Allows for empty scopes
+        while(this.expectTokenAndPass(TokenType.NEWLINE)){
+            continue
+        }
+        const token = this.currentToken;
+        if(this.expectTokenAndPass(terminator)){
+            return new ScopeNode(name, [new VarRetrievalNode(new Token(TokenType.IDENTIFIER, token.start, token.end, "null"))])
+        }
+
+
         while (true) {
             while(this.expectTokenAndPass(TokenType.NEWLINE)){
                 continue
             }
+
             const expr = this.expr();
+            
             if (this.expectTokenAndPass(TokenType.TEMINAL)) {
                 expr.dontReturnValue();
                 nodes.push(expr)

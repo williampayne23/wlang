@@ -181,7 +181,7 @@ export default class Lexer {
           continue
         }
         lexer.success(TokenType.NOT);
-      } else if ("1234567890".includes(lexer.pos.nextChar)) {
+      } else if ("1234567890".includes(lexer.pos.nextChar) && lexer.pos.nextChar != "") {
         lexer.success(...lexer.parseNumber());
       } else if (/[a-zA-Z]/.test(lexer.pos.nextChar)) {
         lexer.success(...lexer.parseIdentifierOrKeyword());

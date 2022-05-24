@@ -38,13 +38,31 @@ export class IllegalCharacterError extends WLANGError {
 }
 
 export class UnexpectedTokenError extends WLANGError {
+    
+    token: Token
+
     constructor(token: Token, start: Position, end: Position, expectedTokens: TokenType[]) {
         const text = `Unexpected token. Expected: ${expectedTokens.map(e => TokenType[e]).join(",")} received ${token}`;
         super(text, start, end);
+        this.token = token;
+        if(token.isType([TokenType.EOF])){
+            
+            return new UnexpectedEndOfFile(start, end, expectedTokens)
+        }
     }
 
     static createFromSingleToken(token: Token, expectedTokens: TokenType[]): UnexpectedTokenError{
         return new UnexpectedTokenError(token, token.start.copy(), token.end.copy(), expectedTokens)
+    }
+}
+
+export class UnexpectedEndOfFile extends WLANGError {
+
+    token: Token
+
+    constructor(start: Position, end: Position, expectedTokens: TokenType[]){
+        super(`Reached end of file. Expected: ${expectedTokens.map(e => TokenType[e]).join(",")}`, start, end)
+        this.token = new Token(TokenType.EOF, start, end)
     }
 }
 
