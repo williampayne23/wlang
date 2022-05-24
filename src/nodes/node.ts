@@ -17,6 +17,10 @@ export default abstract class Node {
         this.return = false;
     }
 
+    doReturnValue() {
+        this.return = true;
+    }
+
     evaluate(context: Context): Value {
         const value = this.visit(context);
         const out = this.return ? value : new NullValue();
@@ -25,5 +29,5 @@ export default abstract class Node {
     }
 
     abstract isEqualTo(node: Node): boolean;
-    abstract visit(context?: Context): Value;
+    abstract visit(context: Context): Value;
 }

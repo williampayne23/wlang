@@ -1,5 +1,6 @@
 import { assertThrows } from "https://deno.land/std@0.140.0/testing/asserts.ts";
-import { assertMatchingTokens, assertTypeOf, makeTokensUtility } from "./testHelpers.ts";
+import NumberValue from "../src/values/numberValue.ts";
+import { assertEqualValues, assertMatchingTokens, assertTypeOf, makeTokensUtility } from "./testHelpers.ts";
 
 
 Deno.test("Test Helpers", async t => {
@@ -20,5 +21,9 @@ Deno.test("Test Helpers", async t => {
     await t.step("Non matching token type isn't equal", () => {
         assertThrows(() => 
         assertMatchingTokens(makeTokensUtility([9]), makeTokensUtility([8])))
+    })
+
+    await t.step("Non matching value isn't equal", () => {
+        assertThrows(() => assertEqualValues(new NumberValue(2), new NumberValue(3)))
     })
 })

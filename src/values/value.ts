@@ -1,5 +1,7 @@
 import { InvalidOperatorError } from "../errors.ts";
+import position from "../position.ts";
 import { Token, TokenType } from "../tokens.ts";
+import BooleanValue from "./booleanValue.ts";
 
 export default abstract class Value {
     // deno-lint-ignore no-explicit-any
@@ -10,6 +12,10 @@ export default abstract class Value {
         if (!(token.type in this.allowedBinOperations)) {
             throw new InvalidOperatorError(token, this);
         }
+    }
+
+    isTruthy(start: position, end: position): boolean{
+        return this.performBinOperation(new BooleanValue(true), new Token(TokenType.EE, start, end)).value
     }
 
     performBinOperation(b: Value, token: Token): Value{

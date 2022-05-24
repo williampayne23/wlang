@@ -7,6 +7,7 @@ import ScopeNode from "./nodes/scopeNode.ts";
 import UnOpNode from "./nodes/unOpNode.ts";
 import VarAsignmentNode from "./nodes/varAssignNode.ts";
 import VarRetrievalNode from "./nodes/varRetrievalNode.ts";
+import IfNode from "./nodes/ifNode.ts";
 
 export default class Parser {
     tokens: Token[];
@@ -26,44 +27,52 @@ export default class Parser {
         }
     }
 
-    globalScope(): Node{
-        const scope =  this.scope("global", TokenType.EOF);
-        scope.openScope()
+    globalScope(): Node {
+        const scope = this.scope("global", TokenType.EOF);
+        scope.openScope();
+        scope.doReturnValue();
         return scope;
     }
 
-    localScope(name: string): ScopeNode{
-        return this.scope(name, TokenType.CLOSEBRACE)
+    localScope(name: string): ScopeNode {
+        return this.scope(name, TokenType.CLOSEBRACE);
     }
 
-    scope(name:string, terminator: TokenType): ScopeNode {
+    scope(name: string, terminator: TokenType): ScopeNode {
         const nodes: Node[] = [];
 
         //Allows for empty scopes
-        while(this.expectTokenAndPass(TokenType.NEWLINE)){
-            continue
+        while (this.expectTokenAndPass(TokenType.NEWLINE)) {
+            continue;
         }
         const token = this.currentToken;
-        if(this.expectTokenAndPass(terminator)){
-            return new ScopeNode(name, [new VarRetrievalNode(new Token(TokenType.IDENTIFIER, token.start, token.end, "null"))])
+        if (this.expectTokenAndPass(terminator)) {
+            return new ScopeNode(name, [
+                new VarRetrievalNode(new Token(TokenType.IDENTIFIER, token.start, token.end, "null")),
+            ]);
         }
 
-
         while (true) {
-            while(this.expectTokenAndPass(TokenType.NEWLINE)){
-                continue
-            }
 
+            if(this.expectTokenAndPass(TokenType.EOF)){
+                throw UnexpectedTokenError.createFromSingleToken(this.currentToken, [
+                    TokenType.NEWLINE,
+                    TokenType.TEMINAL,
+                    terminator,
+                ]);
+            }
+            
             const expr = this.expr();
             
             if (this.expectTokenAndPass(TokenType.TEMINAL)) {
                 expr.dontReturnValue();
-                nodes.push(expr)
-            }else if (this.expectTokenAndPass(TokenType.NEWLINE)){
                 nodes.push(expr);
-            }else if (this.expectTokenAndPass(terminator)){
-                nodes.push(expr)
-            }else{
+            } else if (this.expectTokenAndPass(TokenType.NEWLINE)) {
+                nodes.push(expr);
+            } else if (this.expectTokenAndPass(terminator)) {
+                nodes.push(expr);
+                return new ScopeNode(name, nodes);
+            } else {
                 throw UnexpectedTokenError.createFromSingleToken(this.currentToken, [
                     TokenType.NEWLINE,
                     TokenType.TEMINAL,
@@ -71,8 +80,8 @@ export default class Parser {
                 ]);
             }
 
-            while(this.expectTokenAndPass(TokenType.NEWLINE)){
-                continue
+            while (this.expectTokenAndPass(TokenType.NEWLINE)) {
+                continue;
             }
 
             if (this.expectTokenAndPass(terminator)) {
@@ -83,19 +92,15 @@ export default class Parser {
 
     expr(): Node {
         if (this.expectKeywordAndPass("let")) {
-            const token = this.currentToken;
-            if (!this.expectTokenAndPass(TokenType.IDENTIFIER)) {
-                throw UnexpectedTokenError.createFromSingleToken(token, [TokenType.IDENTIFIER]);
-            }
-            if (!this.expectTokenAndPass(TokenType.EQ)) {
-                throw UnexpectedTokenError.createFromSingleToken(this.currentToken, [TokenType.EQ]);
-            }
-
-            return new VarAsignmentNode(token, this.expr());
+            return this.assignment();
         }
 
-        if (this.expectTokenAndPass(TokenType.OPENBRACE)){
-            return this.localScope("anonymous")
+        if (this.expectKeywordAndPass("if")) {
+            return this.if();
+        }
+
+        if (this.expectTokenAndPass(TokenType.OPENBRACE)) {
+            return this.localScope("anonymous");
         }
         return this.binOp(this.compexpr.bind(this), [
             TokenType.AND,
@@ -105,6 +110,80 @@ export default class Parser {
             TokenType.BITRIGHT,
             TokenType.BITRIGHTZERO,
         ], this.compexpr.bind(this));
+    }
+
+    // function() {
+    //     //TODO
+    // }
+
+    if(): IfNode {
+        const conditionScopePairs:[Node, Node][] = [];
+        const condition = this.expr();
+
+        if (this.expectKeywordAndPass("then")) {
+            //Single If
+            const expr = this.expr();
+            conditionScopePairs.push([condition, expr])
+            while (this.expectKeywordAndPass("elif")){
+                const condition = this.expr();
+                if(!this.expectKeywordAndPass("then")){
+                    throw UnexpectedTokenError.createFromSingleToken(this.currentToken, [TokenType.KEYWORD])
+                }
+                const expr = this.expr();
+                conditionScopePairs.push([condition, expr])
+            }
+            if(this.expectKeywordAndPass("else")){
+                conditionScopePairs.push([VarRetrievalNode.TRUE(this.currentToken.start, this.currentToken.end),this.expr()])
+            }
+            return new IfNode(condition.leftPos, conditionScopePairs)
+        } 
+        if (this.expectTokenAndPass(TokenType.OPENBRACE)) {
+            //Found scope
+            const scope = this.localScope("if");
+            conditionScopePairs.push([condition, scope]);
+            while (this.expectKeywordAndPass("elif")) {
+                const condition = this.expr();
+                if (!this.expectTokenAndPass(TokenType.OPENBRACE)) {
+                    throw UnexpectedTokenError.createFromSingleToken(this.currentToken, [TokenType.OPENBRACE]);
+                }
+                const scope = this.localScope("elif");
+                conditionScopePairs.push([condition, scope]);
+            }
+            if(this.expectKeywordAndPass("else")){
+                if(!this.expectTokenAndPass(TokenType.OPENBRACE)){
+                    throw UnexpectedTokenError.createFromSingleToken(this.currentToken, [TokenType.OPENBRACE]);                
+                }
+                conditionScopePairs.push([VarRetrievalNode.TRUE(this.currentToken.start, this.currentToken.end),this.localScope("else")])
+            }
+            const scopeIf = new IfNode(condition.leftPos, conditionScopePairs)
+            scopeIf.dontReturnValue();
+            return scopeIf
+        }
+        throw UnexpectedTokenError.createFromSingleToken(this.currentToken, [TokenType.OPENBRACE, TokenType.KEYWORD]);
+    }
+
+    // for() {
+    //     //TODO
+    // }
+
+    // while() {
+    //     //TODO
+    // }
+
+    // doWhile() {
+    //     //TODO
+    // }
+
+    assignment(): VarAsignmentNode {
+        const token = this.currentToken;
+        if (!this.expectTokenAndPass(TokenType.IDENTIFIER)) {
+            throw UnexpectedTokenError.createFromSingleToken(token, [TokenType.IDENTIFIER]);
+        }
+        if (!this.expectTokenAndPass(TokenType.EQ)) {
+            throw UnexpectedTokenError.createFromSingleToken(this.currentToken, [TokenType.EQ]);
+        }
+
+        return new VarAsignmentNode(token, this.expr());
     }
 
     compexpr(): Node {
@@ -205,12 +284,33 @@ export default class Parser {
         return false;
     }
 
+    // expect(func: () => Node): boolean {
+    //     const index = this.tokenIndex;
+    //     let result = true;
+    //     try {
+    //         func.call(this);
+    //         this.tokenIndex = index;
+    //     } catch {
+    //         result = false;
+    //     }
+    //     return result;
+    // }
+
+    // expectOrThrow(func: () => Node, error: WLANGError): Node {
+    //     if (this.expect(func)) {
+    //         return func();
+    //     }
+    //     throw error;
+    // }
+
     generateAST(): Node {
-        const token = this.currentToken;        
-        if(this.expectTokenAndPass(TokenType.EOF)){
-            return new ScopeNode("global", [new VarRetrievalNode(new Token(TokenType.IDENTIFIER, token.start, token.end, "null"))])
+        const token = this.currentToken;
+        if (this.expectTokenAndPass(TokenType.EOF)) {
+            return new ScopeNode("global", [
+                new VarRetrievalNode(new Token(TokenType.IDENTIFIER, token.start, token.end, "null")),
+            ]);
         }
-        const response = this.globalScope()
+        const response = this.globalScope();
         return response;
     }
 

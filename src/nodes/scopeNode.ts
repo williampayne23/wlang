@@ -16,6 +16,7 @@ export default class ScopeNode extends Node {
         super(nodes[0].leftPos, nodes[nodes.length - 1].rightPos);
         this.name = name;
         this.nodes = nodes;
+        this.return = false;
     }
 
     openScope(){
@@ -36,9 +37,8 @@ export default class ScopeNode extends Node {
         let value: Value = new NullValue();
         for (let i = 0; i < this.nodes.length; i++) {
             value = this.nodes[i].evaluate(localContext);
-            //this.nodes[i].evaluate(localContext);
         }
-        return this.isClosed? new NullValue() : value;
+        return value;
     }
 
     toString() {

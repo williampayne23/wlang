@@ -110,6 +110,29 @@ x (Will return 3)
 
 ```
 
+### Control flow
+
+#### If statements
+
+If, else if statements, and else statements are written like this:
+
+```
+if condition {
+expression
+} elif condition {
+expression
+} else {
+expression
+}
+```
+
+You can also write a one line ternary statement which returns the result of whatever code is executed
+
+```
+if condition then expression elif condition expression else expression
+```
+
+
 ## Grammar
 
 At the highest level, the parcer will first attempt to find a scope with EOF marking the end of the scope
@@ -124,7 +147,7 @@ At the highest level, the parcer will first attempt to find a scope with EOF mar
                 : OPENBRACE scope
                 : KEYWORD:let assignment
         TODO    : KEYWORD:function function
-        TODO    : KEYWORD:if if  
+                : KEYWORD:if if  
         TODO    : KEYWORD:for for 
         TODO    : KEYWORD:while while 
         TODO    : KEYWORD:do do-while 
@@ -135,8 +158,8 @@ At the highest level, the parcer will first attempt to find a scope with EOF mar
         TODO    : OPENPAREN IDENTIFIER (IDENTIFIER? (COMMA IDENTIFIER)*) CLOSEPAREN ARROW expression
 
         if      
-        TODO    : expression scope (elif expression scope)* (else scope)?
-        TODO    : expression then expression (elif expression then expression)* (else expression)?
+                : expression scope (elif expression scope)* (else scope)?
+                : expression then expression (elif expression then expression)* (else expression)?
 
         for     
         TODO    : OPENPAREN KEYWORD:let asignment; comp-expr; assignment CLOSEPAREN scope

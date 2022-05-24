@@ -1,6 +1,7 @@
 import Context from "../context.ts";
 import { UndefinedVariableError } from "../errors.ts";
-import { Token } from "../tokens.ts";
+import position from "../position.ts";
+import { Token, TokenType } from "../tokens.ts";
 import Value from "../values/value.ts";
 import Node from "./node.ts";
 
@@ -30,4 +31,8 @@ export default class VarRetrievalNode extends Node {
     toString() {
         return `(${this.identifier})`;
     }
+
+    static NULL = (start: position, end: position) => new VarRetrievalNode(new Token(TokenType.IDENTIFIER, start, end, "null"))
+    static TRUE = (start: position, end: position) => new VarRetrievalNode(new Token(TokenType.IDENTIFIER, start, end, "true"))
+    static FALSE = (start: position, end: position) => new VarRetrievalNode(new Token(TokenType.IDENTIFIER, start, end, "false"))
 }

@@ -40,11 +40,13 @@ export class IllegalCharacterError extends WLANGError {
 export class UnexpectedTokenError extends WLANGError {
     
     token: Token
+    expectedTokens: TokenType[]
 
     constructor(token: Token, start: Position, end: Position, expectedTokens: TokenType[]) {
         const text = `Unexpected token. Expected: ${expectedTokens.map(e => TokenType[e]).join(",")} received ${token}`;
         super(text, start, end);
         this.token = token;
+        this.expectedTokens = expectedTokens
         if(token.isType([TokenType.EOF])){
             
             return new UnexpectedEndOfFile(start, end, expectedTokens)
@@ -59,10 +61,13 @@ export class UnexpectedTokenError extends WLANGError {
 export class UnexpectedEndOfFile extends WLANGError {
 
     token: Token
+    expectedTokens: TokenType[]
+
 
     constructor(start: Position, end: Position, expectedTokens: TokenType[]){
         super(`Reached end of file. Expected: ${expectedTokens.map(e => TokenType[e]).join(",")}`, start, end)
         this.token = new Token(TokenType.EOF, start, end)
+        this.expectedTokens = expectedTokens
     }
 }
 

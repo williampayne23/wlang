@@ -39,7 +39,15 @@ OPENBRACE
 
 export enum Keywords {
     let,
-    last
+    last,
+    if,
+    then,
+    else,
+    elif,
+    do,
+    while,
+    for,
+    function
 }
 
 export class Token {

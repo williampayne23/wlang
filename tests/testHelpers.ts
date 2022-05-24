@@ -3,6 +3,7 @@ import Context from "../src/context.ts";
 import Interpreter from "../src/interpreter.ts";
 import Lexer from "../src/lexer.ts";
 import BinOpNode from "../src/nodes/binOpNode.ts";
+import IfNode from "../src/nodes/ifNode.ts";
 import Node from "../src/nodes/node.ts";
 import NumberNode from "../src/nodes/numberNode.ts";
 import ScopeNode from "../src/nodes/scopeNode.ts";
@@ -41,11 +42,14 @@ export function assertMatchingTokens(tokenArray: Token[], expTokenArray: Token[]
     }
 }
 
-export function assertParseResult(text: string, result: nodeSpec) {
+export function parseResult(text: string): Node{
     const tokens = Lexer.tokensFromLine("<stdin>", text);
-    const tree = Parser.parseTokens(tokens);
+    return Parser.parseTokens(tokens);
+}
+
+export function assertParseResult(text: string, result: nodeSpec) {
     const expectedTree = makeASTUtility(result);
-    assertMatchingAST(tree, expectedTree);
+    assertMatchingAST(parseResult(text), expectedTree);
 }
 
 // deno-lint-ignore no-explicit-any
@@ -62,7 +66,7 @@ export function assertParseError(text: string, error: any, nextChar?: string) {
 export function assertEqualValues(value1: Value, value2: Value) {
     const dummyPos = new Position(0, 0, 0, "", "");
     try {
-        assert(value1.performBinOperation(value2, new Token(TokenType.EE, dummyPos, dummyPos)).value);
+        assert(value1.performBinOperation(value2, new Token(TokenType.EE, dummyPos, dummyPos)).isTruthy(dummyPos, dummyPos));
     } catch {
         throw new AssertionError(`Expected ${value2} got ${value1}`)
     }
@@ -71,6 +75,7 @@ export function assertEqualValues(value1: Value, value2: Value) {
 export function assertRuntimeResult(nodeSpec: nodeSpec, value: Value, inContext?: Context): Context {
     const node = makeASTUtility(nodeSpec);
     node.openScope();
+    node.doReturnValue();
     const context = inContext ?? Interpreter.newGlobalContext();
     const outValue = node.evaluate(context);
     assertEqualValues(outValue, value);
@@ -90,12 +95,17 @@ export function assertNodeError(nodeSpec: nodeSpec, error: any) {
 type binOpSpec = [nodeSpec, TokenType, nodeSpec];
 type singleNodeSpec = [number | string];
 type unOpSpec = [TokenType | string, nodeSpec];
-type scopeSpec = [Record<string, ([nodeSpec] | [])>];
+type scopeSpec = [Record<string, (nodeSpec[] | [])>];
 type nodeSpec = (scopeSpec | binOpSpec | singleNodeSpec | unOpSpec);
 
 export function makeASTUtility(spec: nodeSpec): ScopeNode {
     const node = makeInnerNodes(spec);
     return new ScopeNode("global", [node]);
+}
+
+export function makeIfNode(specs: [nodeSpec, nodeSpec][]){
+    const nodes: [Node, Node][] = specs.map(spec => [makeInnerNodes(spec[0]), makeInnerNodes(spec[1])])
+    return new IfNode(Position.dummy, nodes);
 }
 
 function makeInnerNodes(spec: nodeSpec): Node {

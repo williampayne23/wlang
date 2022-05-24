@@ -16,10 +16,14 @@ async function main() {
         }
     }
 
-    while (args["r"] || args["repl"] || args["_"].length == 0) {
-        const line = prompt(">");
-        if (line) {
-            interpreter.executeCode("<stdin>", line, true);
-        }
+    if(!(args["r"] || args["repl"] || args["_"].length == 0)){
+        return
+    }
+
+    const repl = interpreter.repl()
+    repl.next()
+    let line = prompt(">") ?? ""
+    while (!repl.next(line).done) {
+        line = prompt(">") ?? "";
     }
 }

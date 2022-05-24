@@ -1,4 +1,7 @@
 export default class Position {
+
+    static dummy = new Position(0, 0, 0, "", "")
+
     col: number;
     line: number;
     file: string;
