@@ -1,11 +1,11 @@
 import { assertAlmostEquals, assertEquals } from "https://deno.land/std@0.140.0/testing/asserts.ts";
-import { DivideByZeroError } from "../../../src/errors.ts";
-import Position from "../../../src/position.ts";
-import { Token, TokenType } from "../../../src/tokens.ts";
-import NumberValue from "../../../src/values/numberValue.ts";
-import { assertTypeOf } from "../../testHelpers.ts";
+import { DivideByZeroError } from "../../src/errors.ts";
+import Position from "../../src/position.ts";
+import { Token, TokenType } from "../../src/tokens.ts";
+import NumberValue from "../../src/values/numberValue.ts";
+import { assertTypeOf } from "../testHelpers.ts";
 
-Deno.test("Values", async t => {
+Deno.test("Number Value", async t => {
 
 
     

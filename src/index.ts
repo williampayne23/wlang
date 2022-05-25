@@ -9,20 +9,19 @@ async function main() {
     const args = parse(Deno.args);
 
     if (args["_"].length != 0) {
-        for(const i in args["_"]){
-          const file = args["_"][i]
-          const text = await Deno.readTextFile(file as string);
-            interpreter.executeCode(file as string, text);
+        for (const i in args["_"]) {
+            const file = args["_"][i] as string;
+            await interpreter.executeFile(file)
         }
     }
 
-    if(!(args["r"] || args["repl"] || args["_"].length == 0)){
-        return
+    if (!(args["r"] || args["repl"] || args["_"].length == 0)) {
+        return;
     }
 
-    const repl = interpreter.repl()
-    repl.next()
-    let line = prompt(">") ?? ""
+    const repl = interpreter.repl();
+    repl.next();
+    let line = prompt(">") ?? "";
     while (!repl.next(line).done) {
         line = prompt(">") ?? "";
     }

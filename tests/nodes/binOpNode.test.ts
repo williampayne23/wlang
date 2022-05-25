@@ -1,6 +1,6 @@
-import { InvalidOperatorError } from "../../../src/errors.ts";
-import { TokenType } from "../../../src/tokens.ts";
-import { assertNodeError } from "../../testHelpers.ts";
+import { InvalidOperatorError } from "../../src/errors.ts";
+import { TokenType } from "../../src/tokens.ts";
+import { assertNodeError } from "../testHelpers.ts";
 
 
 Deno.test("Binary Operator Node", async t => {

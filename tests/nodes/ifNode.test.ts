@@ -1,7 +1,7 @@
-import Interpreter from "../../../src/interpreter.ts";
-import NullValue from "../../../src/values/nullValue.ts";
-import NumberValue from "../../../src/values/numberValue.ts";
-import { assertEqualValues, makeIfNode } from "../../testHelpers.ts";
+import Interpreter from "../../src/interpreter.ts";
+import NullValue from "../../src/values/nullValue.ts";
+import NumberValue from "../../src/values/numberValue.ts";
+import { assertEqualValues, makeIfNode } from "../testHelpers.ts";
 
 Deno.test("If Node", () => {
     const interpreter = new Interpreter()

@@ -43,5 +43,9 @@ export default abstract class Value {
         return `${this.value}`;
     }
 
+    equals(value: Value){
+        return this.value == value.value
+    }
+
     abstract copy(): Value;
 }

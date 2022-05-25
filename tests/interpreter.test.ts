@@ -32,5 +32,13 @@ Deno.test("Interpreter", async (t) => {
         })
     })
 
+    await t.step("File", async () => {
+        let val = await i.executeFile("tests/testFile.wlang")
+        assertEqualValues(val, new NumberValue(1))
+
+        val = await i.executeFile("tests/testError.wlang")
+        assertEqualValues(val, new NullValue())
+    })
+
 
 })

@@ -1,7 +1,7 @@
 import { UnexpectedEndOfFile, UnexpectedTokenError } from "../src/errors.ts";
 import ScopeNode from "../src/nodes/scopeNode.ts";
 import { TokenType } from "../src/tokens.ts";
-import { assertMatchingAST, assertParseError, assertParseResult, makeIfNode, parseResult } from "./testHelpers.ts";
+import { assertMatchingAST, assertParseError, assertParseResult, makeForNode, makeIfNode, makeWhileNode, parseResult } from "./testHelpers.ts";
 
 Deno.test("Parser", async (t) => {
     await t.step("Simple parse", () => {
@@ -39,6 +39,21 @@ Deno.test("Parser", async (t) => {
         assertParseError("if 2 {} elif 3 3", UnexpectedTokenError)
         assertParseError("if 2 {} elif 3 {} else 10", UnexpectedTokenError)
     });
+
+    await t.step("For", () => {
+        const expForNode = new ScopeNode("global", [makeForNode([[2], [[1], TokenType.GT, [2]], [3], [{for: [[3]]}]])])
+        assertMatchingAST(parseResult("for (2; 1 > 2; 3) {3}"), expForNode)
+    })
+
+    await t.step("While and Do While", () => {
+        const expWhileNode = new ScopeNode("global", [makeWhileNode([[[1], TokenType.GT, [2]], [{while: [[3]]}]], false)])
+        assertMatchingAST(parseResult("while (1 > 2) {3}"), expWhileNode)
+
+        const expDoWhileNode = new ScopeNode("global", [makeWhileNode([[[1], TokenType.GT, [2]], [{"do-while": [[3]]}]], true)])
+        assertMatchingAST(parseResult("do {3} while (1 > 2)"), expDoWhileNode)
+
+        assertParseError("do {4} x", UnexpectedTokenError)
+    })
 
     await t.step("Local Scope", () => {
         assertParseResult("{\n\n2;\n\n}", [{ anonymous: [[2]] }]);

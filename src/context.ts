@@ -12,7 +12,15 @@ export default class Context {
         this.values = {"": new NullValue()};
     }
 
+    has(name: string): boolean{
+        return name in this.values
+    }
+
     set(name: string, value: Value) {
+        if(!this.has(name) && this.parent?.has(name)){
+            this.parent.set(name, value);
+            return
+        }
         this.values[name] = value;
     }
 

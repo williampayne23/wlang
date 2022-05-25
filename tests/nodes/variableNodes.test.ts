@@ -1,6 +1,6 @@
-import { UndefinedVariableError } from "../../../src/errors.ts";
-import NumberValue from "../../../src/values/numberValue.ts";
-import { assertEqualValues, assertNodeError, assertRuntimeResult } from "../../testHelpers.ts";
+import { UndefinedVariableError } from "../../src/errors.ts";
+import NumberValue from "../../src/values/numberValue.ts";
+import { assertEqualValues, assertNodeError, assertRuntimeResult } from "../testHelpers.ts";
 
 
 Deno.test("Variable Assignment", () => {

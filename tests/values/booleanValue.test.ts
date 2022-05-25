@@ -1,10 +1,10 @@
 import { assertEquals, assertThrows } from "https://deno.land/std@0.140.0/testing/asserts.ts";
-import Position from "../../../src/position.ts";
-import { Token, TokenType } from "../../../src/tokens.ts";
-import BooleanValue from "../../../src/values/booleanValue.ts";
-import { assertEqualValues } from "../../testHelpers.ts";
+import Position from "../../src/position.ts";
+import { Token, TokenType } from "../../src/tokens.ts";
+import BooleanValue from "../../src/values/booleanValue.ts";
+import { assertEqualValues } from "../testHelpers.ts";
 
-Deno.test("Values", async (t) => {
+Deno.test("Boolean Value", async (t) => {
     await t.step("Boolean string Repr", () => {
         const value = new BooleanValue(false);
         assertEquals(value?.toString(), "false");

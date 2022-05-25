@@ -1,6 +1,6 @@
 import { assertEquals } from "https://deno.land/std@0.140.0/testing/asserts.ts";
-import { WLANGError } from "../../src/errors.ts";
-import Position from "../../src/position.ts";
+import { WLANGError } from "../src/errors.ts";
+import Position from "../src/position.ts";
 
 Deno.test("Error", async t => {
     await t.step("String repr", () => {

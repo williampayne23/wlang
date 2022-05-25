@@ -3,6 +3,7 @@ import Context from "../src/context.ts";
 import Interpreter from "../src/interpreter.ts";
 import Lexer from "../src/lexer.ts";
 import BinOpNode from "../src/nodes/binOpNode.ts";
+import ForNode from "../src/nodes/forNode.ts";
 import IfNode from "../src/nodes/ifNode.ts";
 import Node from "../src/nodes/node.ts";
 import NumberNode from "../src/nodes/numberNode.ts";
@@ -10,6 +11,7 @@ import ScopeNode from "../src/nodes/scopeNode.ts";
 import UnOpNode from "../src/nodes/unOpNode.ts";
 import VarAsignmentNode from "../src/nodes/varAssignNode.ts";
 import VarRetrievalNode from "../src/nodes/varRetrievalNode.ts";
+import WhileNode from "../src/nodes/whileNode.ts";
 import Parser from "../src/parser.ts";
 import Position from "../src/position.ts";
 import { Token, TokenType } from "../src/tokens.ts";
@@ -64,9 +66,8 @@ export function assertParseError(text: string, error: any, nextChar?: string) {
 }
 
 export function assertEqualValues(value1: Value, value2: Value) {
-    const dummyPos = new Position(0, 0, 0, "", "");
     try {
-        assert(value1.performBinOperation(value2, new Token(TokenType.EE, dummyPos, dummyPos)).isTruthy(dummyPos, dummyPos));
+        assert(value1.equals(value2));
     } catch {
         throw new AssertionError(`Expected ${value2} got ${value1}`)
     }
@@ -106,6 +107,16 @@ export function makeASTUtility(spec: nodeSpec): ScopeNode {
 export function makeIfNode(specs: [nodeSpec, nodeSpec][]){
     const nodes: [Node, Node][] = specs.map(spec => [makeInnerNodes(spec[0]), makeInnerNodes(spec[1])])
     return new IfNode(Position.dummy, nodes);
+}
+
+export function makeForNode(specs: [nodeSpec, nodeSpec, nodeSpec, nodeSpec]){
+    const nodes: Node[] = specs.map(spec => makeInnerNodes(spec))
+    return new ForNode(nodes[0], nodes[1], nodes[2], nodes[3] as ScopeNode)
+}
+
+export function makeWhileNode(specs: [nodeSpec, nodeSpec], isDo: boolean){
+    const nodes: Node[] = specs.map(spec => makeInnerNodes(spec))
+    return new WhileNode(nodes[0], nodes[1] as ScopeNode, isDo)
 }
 
 function makeInnerNodes(spec: nodeSpec): Node {

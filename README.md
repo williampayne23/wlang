@@ -132,10 +132,35 @@ You can also write a one line ternary statement which returns the result of what
 if condition then expression elif condition expression else expression
 ```
 
+#### For loop
 
+The for loop will evaluate expression1 before the loop starts, it will run the loop so long as the comparison evaluates to true, and at the end of every loop iteration it will run expression 2. 
+
+```
+for (expression1; comparison; expression2){
+        LOGIC
+}
+```
+
+#### While and do while loop
+
+The while loop will execute so long as the comparative expression evaluates to true.
+
+
+```
+while (comp-expr) {
+        LOGIC
+}
+
+The do-while loop will execute so long as the comparative expression evaluates to true at the end of every loop.
+
+do {
+        LOGIC
+} while (comp-expr)
+```
 ## Grammar
 
-At the highest level, the parcer will first attempt to find a scope with EOF marking the end of the scope
+At the highest level, the parser will first attempt to find a scope with EOF marking the end of the scope
 
         global-scope    
                 : (expression (SEMICOLON | NEWLINE | EOF) NEWLINE*)+ EOF
@@ -148,9 +173,9 @@ At the highest level, the parcer will first attempt to find a scope with EOF mar
                 : KEYWORD:let assignment
         TODO    : KEYWORD:function function
                 : KEYWORD:if if  
-        TODO    : KEYWORD:for for 
-        TODO    : KEYWORD:while while 
-        TODO    : KEYWORD:do do-while 
+                : KEYWORD:for for 
+                : KEYWORD:while while 
+                : KEYWORD:do do-while 
                 : comp-expr ((AND | OR) comp-expr)*
 
         function
@@ -162,13 +187,13 @@ At the highest level, the parcer will first attempt to find a scope with EOF mar
                 : expression then expression (elif expression then expression)* (else expression)?
 
         for     
-        TODO    : OPENPAREN KEYWORD:let asignment; comp-expr; assignment CLOSEPAREN scope
+                : OPENPAREN KEYWORD:let asignment; comp-expr; assignment CLOSEPAREN scope
 
         while   
-        TODO    : OPENPAREN comp-expr CLOSEPAREN scope
+                : OPENPAREN comp-expr CLOSEPAREN scope
         
         do-while
-        TODO    : scope while OPENPAREN comp-expr CLOSEPAREN
+                : scope while OPENPAREN comp-expr CLOSEPAREN
 
 
         asignment

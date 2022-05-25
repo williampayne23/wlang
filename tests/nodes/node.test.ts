@@ -1,7 +1,7 @@
 import { assert, assertEquals, assertThrows } from "https://deno.land/std@0.140.0/testing/asserts.ts";
-import Context from "../../../src/context.ts";
-import { TokenType } from "../../../src/tokens.ts";
-import { assertMatchingAST, makeASTUtility, makeIfNode } from "../../testHelpers.ts";
+import Context from "../../src/context.ts";
+import { TokenType } from "../../src/tokens.ts";
+import { assertMatchingAST, makeASTUtility, makeForNode, makeIfNode, makeWhileNode } from "../testHelpers.ts";
 
 Deno.test("Nodes", async (t) => {
 
@@ -22,6 +22,8 @@ Deno.test("Nodes", async (t) => {
         assertThrows(() => assertMatchingAST(makeASTUtility(["d"]), makeASTUtility([[1], TokenType.PLUS, [2]])));
         assertThrows(() => assertMatchingAST(makeASTUtility([{scope: [[2]]}]), makeASTUtility([2])));
         assertThrows(() => assertMatchingAST(makeIfNode([[["true"], [2]]]), makeASTUtility([2])));
+        assertThrows(() => assertMatchingAST(makeWhileNode([[1], [2]], false), makeASTUtility([2])));
+        assertThrows(() => assertMatchingAST(makeForNode([[1], [1], [1], [{if: [[1]]}]]), makeASTUtility([2])));
     });
 
     await t.step("String repr", () => {

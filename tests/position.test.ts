@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.140.0/testing/asserts.ts";
-import Position from "../../src/position.ts";
+import Position from "../src/position.ts";
 
 Deno.test("Position", async t => {
     await t.step("Line counting", () => {

@@ -1,7 +1,7 @@
-import { InvalidOperatorError } from "../../../src/errors.ts";
-import { TokenType } from "../../../src/tokens.ts";
-import NumberValue from "../../../src/values/numberValue.ts";
-import { assertNodeError, assertRuntimeResult } from "../../testHelpers.ts";
+import { InvalidOperatorError } from "../../src/errors.ts";
+import { TokenType } from "../../src/tokens.ts";
+import NumberValue from "../../src/values/numberValue.ts";
+import { assertNodeError, assertRuntimeResult } from "../testHelpers.ts";
 
 Deno.test("Unary Operator Node", async (t) => {
     await t.step("Negative numbers", () => {

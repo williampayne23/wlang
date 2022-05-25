@@ -7,7 +7,7 @@
   "license": "MIT",
   "scripts": {
     "start": "deno run --allow-read src/index.ts",
-    "test": "deno test",
-    "coverage": "deno test --coverage=cov_profile; deno coverage cov_profile; rm -R cov_profile"
+    "test": "deno test --allow-read",
+    "coverage": "deno test --allow-read --coverage=cov_profile; deno coverage cov_profile; rm -R cov_profile"
   }
 }

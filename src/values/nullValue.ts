@@ -19,4 +19,8 @@ export default class NullValue extends Value {
     copy() {
         return new NullValue();
     }
+
+    equals(value: Value){
+        return value.isNull();
+    }
 }

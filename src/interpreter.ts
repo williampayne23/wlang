@@ -25,6 +25,17 @@ export default class Interpreter {
         return globalContext
     }
 
+    async executeFile(fileName: string): Promise<Value>{
+        try {
+        const text = await Deno.readTextFile(fileName);
+        console.log(text)
+        return this.executeCode(fileName, text);
+        } catch (e) {
+            console.error(`${e}`)
+        }
+        return new NullValue();
+    }
+
     executeCode(source: string, code: string) : Value {
         //Lexer
         const tokens = Lexer.tokensFromLine(source, code);
@@ -45,7 +56,7 @@ export default class Interpreter {
             } catch (e) {
                 if(e instanceof UnexpectedEndOfFile && (e as UnexpectedEndOfFile).expectedTokens.includes(TokenType.NEWLINE)){
                     const extendLine = yield new NullValue();
-                    line = line + extendLine;
+                    line = line + '\n' + extendLine;
                     continue
                 }
                 console.log(`${e}`);
